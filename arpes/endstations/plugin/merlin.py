@@ -241,7 +241,12 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 l.attrs["slit_width"] = width
 
             if "undulator_polarization" in l.attrs:
-                phase_angle_lookup = {0: (0, 0), 2: (np.pi / 2, 0)}  # LH  # LV
+                phase_angle_lookup = {
+                    0: (0, 0), # LH
+                    2: (np.pi / 2, 0), # LV
+                    -1: (0, -np.pi / 4), # RC
+                    1: (0, np.pi / 4) # LC
+                }
                 polarization_theta, polarization_alpha = phase_angle_lookup[
                     int(l.attrs["undulator_polarization"])
                 ]
