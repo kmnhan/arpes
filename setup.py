@@ -13,7 +13,7 @@ DESCRIPTION = "Modular data analysis code for angle resolved photoemission spect
 URL = "https://gitlab.com/lanzara-group/python-arpes"
 EMAIL = "chstan@berkeley.edu"
 AUTHOR = "Conrad Stansbury"
-REQUIRES_PYTHON = ">=3.8.0,<3.9"  # we're being less permissive because of pyqtgraph
+REQUIRES_PYTHON = ">=3.8.0,<3.10"
 
 about = {}
 with open("./arpes/__init__.py") as fp:
@@ -27,7 +27,7 @@ DEPENDENCY_GROUPS = {
         "xarray>=0.16.1",
         "h5py>=3.2.1",
         "pyqtgraph>=0.12.0,<0.13.0",
-        "PyQt5==5.15",
+        "PyQt5>=5.15,<5.16",
         "netCDF4>=1.5.0,<2.0.0",
         "colorcet",
         "pint",
