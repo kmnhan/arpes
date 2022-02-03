@@ -455,7 +455,7 @@ def bz3d_plot(
     ax.set_xlim(-s, s)
     ax.set_ylim(-s, s)
     ax.set_zlim(-s, s)
-    ax.set_aspect("equal")
+    ax.set_box_aspect([1,1,1])
 
     ax.view_init(azim=azim / np.pi * 180, elev=elev / np.pi * 180)
 
