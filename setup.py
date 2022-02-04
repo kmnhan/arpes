@@ -13,7 +13,7 @@ DESCRIPTION = "Modular data analysis code for angle resolved photoemission spect
 URL = "https://gitlab.com/lanzara-group/python-arpes"
 EMAIL = "chstan@berkeley.edu"
 AUTHOR = "Conrad Stansbury"
-REQUIRES_PYTHON = ">=3.8.0,<3.10"
+REQUIRES_PYTHON = ">=3.8.0"
 
 about = {}
 with open("./arpes/__init__.py") as fp:
@@ -48,7 +48,7 @@ DEPENDENCY_GROUPS = {
         "tqdm",
         "rx",
         "dill",
-        "ase>=3.17.0,<3.22.0",
+        "ase>=3.17.0",
         "numba>=0.53.0,<1.0.0",
     ],
     "igor": ["igor==0.3.1"],
