@@ -626,12 +626,13 @@ def bz2d_plot(
     c = kwargs.pop("c", "k")
     c = kwargs.pop("color", c)
     ls = kwargs.pop("ls", kwargs.pop("linestyle", "-"))
+    lw = kwargs.pop("lw", kwargs.pop("linewidth", 0.5))
 
     for points, normal in bz1:
         points = apply_transformations(points, transformations)
         x, y, z = np.concatenate([points, points[:1]]).T
 
-        ax.plot(x, y, c=c, ls=ls, **kwargs)
+        ax.plot(x, y, c=c, ls=ls, lw=lw, **kwargs)
         maxp = max(maxp, points.max())
 
     if repeat is not None:
