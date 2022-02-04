@@ -120,13 +120,13 @@ def symmetrize_axis(data, axis_name, flip_axes=None, shift_axis=True):
         Data after symmetrization procedure.
     """
     data = data.copy(deep=True)  # slow but make sure we don't bork axis on original
-    data.coords[axis_name].values = data.coords[axis_name].values - data.coords[axis_name].values[0]
+    data = data.assign_coords({axis_name:(data.coords[axis_name].values - data.coords[axis_name].values[0])})
 
     selector = {}
     selector[axis_name] = slice(None, None, -1)
     rev = data.sel(**selector).copy()
 
-    rev.coords[axis_name].values = -rev.coords[axis_name].values
+    rev = rev.assign_coords({axis_name:-rev.coords[axis_name].values})
 
     if flip_axes is None:
         flip_axes = []
@@ -135,7 +135,7 @@ def symmetrize_axis(data, axis_name, flip_axes=None, shift_axis=True):
         selector = {}
         selector[axis] = slice(None, None, -1)
         rev = rev.sel(**selector)
-        rev.coords[axis].values = -rev.coords[axis].values
+        rev = rev.assign_coords({axis_name:-rev.coords[axis_name].values})
 
     return rev.combine_first(data)
 
