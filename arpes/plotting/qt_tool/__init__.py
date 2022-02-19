@@ -2,7 +2,7 @@
 # pylint: disable=import-error
 
 from arpes.utilities.qt.utils import PlotOrientation
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide6 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 import numpy as np
 import weakref
@@ -137,7 +137,7 @@ class QtToolWindow(SimpleWindow):
 
 
 class QtTool(SimpleApp):
-    """QtTool is an implementation of Image/Bokeh Tool based on PyQtGraph and PyQt5.
+    """QtTool is an implementation of Image/Bokeh Tool based on PyQtGraph and PySide6.
 
     For now we retain a number of the metaphors from BokehTool, including a "context"
     that stores the state, and can be used to programmatically interface with the tool.

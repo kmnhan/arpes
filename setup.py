@@ -27,7 +27,7 @@ DEPENDENCY_GROUPS = {
         "xarray>=0.16.1",
         "h5py>=3.2.1",
         "pyqtgraph>=0.12.0,<0.13.0",
-        "PyQt5>=5.15,<5.16",
+        "PySide6>=6.2.2,<6.3",
         "netCDF4>=1.5.0,<2.0.0",
         "colorcet",
         "pint",
@@ -91,7 +91,7 @@ Documentation available at: {}
 You should follow standard best practices for working with IPython and Jupyter.
 
 To get the interactive volumetric data explorer `qt_tool` you will need to install
-`PyQt5` and `pyqtgraph`. 
+`PySide6` and `pyqtgraph`. 
 
 To use the Igor data loading libraries in PyARPES you will need to install the `igor` 
 module from 'https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1'.

@@ -1,7 +1,7 @@
 """Infrastructure code for Qt application windows."""
 import sys
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide6 import QtGui, QtCore, QtWidgets
 
 import arpes.config
 from arpes.utilities.excepthook import patched_excepthook

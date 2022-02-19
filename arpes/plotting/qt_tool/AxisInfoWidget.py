@@ -1,7 +1,7 @@
 """A widget providing rudimentary information about an axis on a DataArray."""
 # pylint: disable=import-error
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 __all__ = ("AxisInfoWidget",)
 

@@ -1,4 +1,4 @@
-"""Easily composable and reactive UI utilities using RxPy and PyQt5.
+"""Easily composable and reactive UI utilities using RxPy and PySide6.
 
 This makes UI prototyping *MUCH* faster. In order to log IDs so that you can 
 attach subscriptions after the fact, you will need to use the CollectUI
@@ -35,7 +35,7 @@ submit('submit', ['check', 'slider', 'file'], ui).subscribe(lambda item: print(i
 
 With the line above, whenever the button with id='submit' is pressed, we will log a dictionary 
 with the most recent values of the inputs {'check','slider','file'} as a dictionary with these 
-keys. This allows building PyQt5 "forms" without effort.
+keys. This allows building PySide6 "forms" without effort.
 """
 from enum import Enum
 from typing import Type
@@ -51,7 +51,7 @@ from typing import Dict, List, Optional
 from collections import namedtuple
 
 import functools
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QGridLayout,
     QWidget,
     QVBoxLayout,
@@ -62,8 +62,8 @@ from PyQt5.QtWidgets import (
     QLabel,
 )
 
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import Qt
+from PySide6 import QtCore, QtGui
+from PySide6.QtCore import Qt
 
 from .widgets import *
 

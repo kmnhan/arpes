@@ -104,7 +104,7 @@ step we will add only as much as is needed to spawn a window.
 
 .. code:: python
 
-   from PyQt5 import QtWidgets
+   from PySide6 import QtWidgets
    from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow, BasicHelpDialog
 
 

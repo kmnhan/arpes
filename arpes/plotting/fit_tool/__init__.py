@@ -1,7 +1,7 @@
 """Provides a Qt based implementation of a curve fit inspection tool."""
 from arpes.plotting.qt_tool.BinningInfoWidget import BinningInfoWidget
 from arpes.utilities.qt.utils import PlotOrientation, ReactivePlotRecord
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide6 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 import numpy as np
 import dill

@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 from scipy import interpolate
 
-from PyQt5 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 from arpes import analysis
 from arpes.utilities import normalize_to_spectrum

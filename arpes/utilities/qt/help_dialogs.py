@@ -1,7 +1,7 @@
 """A help dialog showing keyboard shortcuts for Qt application."""
 # pylint: disable=import-error
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from arpes.utilities.ui import PRETTY_KEYS, label, vertical
 
