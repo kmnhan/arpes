@@ -1224,7 +1224,8 @@ class ARPESAccessorBase:
 
         sliced = self._obj.sel(**slices)
         thickness = np.product([len(sliced.coords[k]) for k in slice_kwargs.keys()])
-        normalized = sliced.sum(slices.keys(), keep_attrs=True) / thickness
+        normalized = sliced.sum(slices.keys(),
+                                keep_attrs=True, min_count=1) / thickness
         for k, v in slices.items():
             normalized.coords[k] = (v.start + v.stop) / 2
         normalized.attrs.update(self._obj.attrs.copy())
