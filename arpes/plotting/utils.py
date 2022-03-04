@@ -1178,6 +1178,7 @@ def name_for_dim(dim_name, escaped=True):
     if plt.rcParams.get('text.usetex'):
         name = {
             "temperature": "Temperature",
+            "T": "T",
             "beta": r"\ensuremath{\beta}",
             "theta": r"\ensuremath{\theta}",
             "chi": r"\ensuremath{\chi}",
@@ -1220,6 +1221,7 @@ def unit_for_dim(dim_name, escaped=True):
     if plt.rcParams.get('text.usetex'):
         unit = {
             "temperature": r"\textrm{K}",
+            "T": r"\textrm{K}",
             "theta": r"\textrm{rad}",
             "beta": r"\textrm{rad}",
             "psi": r"\textrm{rad}",
