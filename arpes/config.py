@@ -84,7 +84,7 @@ def update_configuration(user_path: Optional[str] = None) -> None:
 CONFIG = {
     "WORKSPACE": {},
     "CURRENT_CONTEXT": None,
-    "ENABLE_LOGGING": True,
+    "ENABLE_LOGGING": False,
     "LOGGING_STARTED": False,
     "LOGGING_FILE": None,
 }
