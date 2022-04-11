@@ -1,10 +1,9 @@
 """Plotting routines related to 2D ARPES cuts and dispersions."""
-import warnings
+#import warnings
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import xarray as xr
 from arpes.io import load_data
 from arpes.preparation import normalize_dim
@@ -12,7 +11,8 @@ from arpes.provenance import save_plot_provenance
 from arpes.utilities import bz
 from arpes.utilities.conversion import remap_coords_to
 
-from .utils import path_for_plot, label_for_dim, label_for_symmetry_point, label_for_colorbar
+from .utils import (label_for_colorbar, label_for_dim,
+                    label_for_symmetry_point, path_for_plot)
 
 __all__ = [
     "plot_dispersion",
@@ -47,7 +47,7 @@ def cut_dispersion_plot(
     e_floor=None,
     title=None,
     ax=None,
-    include_symmetry_points=True,
+    include_symmetry_points=False,
     out=None,
     quality="high",
     **kwargs
@@ -103,9 +103,10 @@ def cut_dispersion_plot(
 
     if title is None:
         title = "{} Cut Through Symmetry Points".format(data.S.label.replace("_", " "))
-
     ax.set_title(title)
-    colormap = plt.get_cmap("Blues")
+
+    color = kwargs.pop("color", "Blues")
+    colormap = plt.get_cmap(color)
 
     # color fermi surface
     fermi_surface = data.S.fermi_surface
@@ -202,10 +203,10 @@ def cut_dispersion_plot(
     Ys = np.ones(inset_face.data.shape)
     if y_dim == axis_X:
         Ys *= data.S.phi_offset
-        Xs += data.S.map_angle_offset
+        Xs += data.S.psi_offset
         Xs, Ys = Ys, Xs
     else:
-        Ys *= data.S.map_angle_offset
+        Ys *= data.S.psi_offset
         Xs += data.S.phi_offset
     ax.plot_surface(
         Xs,
@@ -225,12 +226,12 @@ def cut_dispersion_plot(
     Ys, Zs = np.meshgrid(inset_face.coords[axis_Y], inset_face.coords[z_dim])
     Xs = np.ones(inset_face.data.shape)
     if x_dim == axis_Y:
-        Xs *= data.S.map_angle_offset
+        Xs *= data.S.psi_offset
         Ys += data.S.phi_offset
         Xs, Ys = Ys, Xs
     else:
         Xs *= data.S.phi_offset
-        Ys += data.S.map_angle_offset
+        Ys += data.S.psi_offset
 
     ax.plot_surface(
         Xs,
@@ -348,50 +349,58 @@ def reference_scan_fermi_surface(data, out=None, **kwargs):
 @save_plot_provenance
 def labeled_fermi_surface(
     data,
-    title=None,
-    ax=None,
+    #title=None,
+    #ax=None
     hold=False,
     include_symmetry_points=True,
-    include_bz=True,
+    #include_bz=True,
     out=None,
     fermi_energy=0,
     **kwargs
 ):
     """Plots a Fermi surface with high symmetry points annotated onto it."""
     fig = None
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(7, 7))
+    if "ax" in kwargs:
+        ax = kwargs.pop("ax")
+    else:
+        figsize = kwargs.pop("figsize", None)
+        fig, ax = plt.subplots(figsize=figsize)
 
-    if title is None:
-        title = "{} Fermi Surface".format(data.S.label.replace("_", " "))
-
+    #if title is None:
+    #   title = "{} Fermi Surface".format(data.S.label.replace("_", " "))
+    cmap = kwargs.pop("cmap", plt.cm.terrain_r)
+    add_colorbar = kwargs.pop("add_colorbar", False)
+    
     if "eV" in data.dims:
         data = data.S.generic_fermi_surface(fermi_energy)
 
-    mesh = data.plot(ax=ax)
-    mesh.colorbar.set_label(label_for_colorbar(data))
+    data.plot(
+        ax=ax,
+        cmap=cmap, add_colorbar = add_colorbar,
+    **kwargs)
+    #mesh.colorbar.set_label(label_for_colorbar(data))
 
-    if data.S.is_differentiated:
-        mesh.set_cmap("Blues")
+    #if data.S.is_differentiated:
+    #    mesh.set_cmap("Blues")
 
     dim_order = [ax.get_xlabel(), ax.get_ylabel()]
 
     setattr(ax, "dim_order", dim_order)
     ax.set_xlabel(label_for_dim(data, ax.get_xlabel()))
     ax.set_ylabel(label_for_dim(data, ax.get_ylabel()))
-    ax.set_title(title)
+    #ax.set_title(title)
 
-    marker_color = "red" if data.S.is_differentiated else "red"
+    marker_color = "red" #if data.S.is_differentiated else "red"
 
-    if include_bz:
-        symmetry = bz.bz_symmetry(data.S.iter_own_symmetry_points)
+    #if include_bz:
+        #symmetry = bz.bz_symmetry(data.S.iter_own_symmetry_points)
 
         # TODO Implement this
-        warnings.warn("BZ region display not implemented.")
+        #warnings.warn("BZ region display not implemented.")
 
     if include_symmetry_points:
         for point_name, point_location in data.S.iter_symmetry_points:
-            warnings.warn("Symmetry point locations are not k-converted")
+            #warnings.warn("Symmetry point locations are not k-converted")
             coords = [point_location[d] for d in dim_order]
             ax.plot(*coords, marker=".", color=marker_color)
             ax.annotate(
