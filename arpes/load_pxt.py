@@ -259,7 +259,8 @@ def read_single_pxt(
         return wave_to_xarray(children[0])
 
     if not allow_multiple:
-        warnings.warn(f"Igor PXT file contained {len(children)} waves. Ignoring all but first.")
+        if len(children) != 1:
+            warnings.warn(f"Igor PXT file contained {len(children)} waves. Ignoring all but first.")
         return wave_to_xarray(children[0])
 
     children = {c.name: wave_to_xarray(c) for c in children}
