@@ -65,7 +65,7 @@ def full_angles_to_k(kinetic_energy, phi, psi, alpha, beta, theta, chi, inner_po
     vrchi_y = sin_chi * vrbeta_x + cos_chi * vrbeta_y
     vrchi_z = vrbeta_z
 
-    v_par_sq = vrchi_x ** 2 + vrchi_y ** 2
+    v_par_sq = vrchi_x**2 + vrchi_y**2
 
     """
     velocity -> momentum in each of parallel and perpendicular directions
@@ -118,7 +118,7 @@ def euler_to_kz(kinetic_energy, phi, beta, theta=0, inner_potential=10, slit_is_
         beta_term = np.cos(phi + theta) * np.cos(beta)
 
     return arpes.constants.K_INV_ANGSTROM * np.sqrt(
-        kinetic_energy * beta_term ** 2 + inner_potential
+        kinetic_energy * beta_term**2 + inner_potential
     )
 
 
@@ -189,82 +189,75 @@ def calculate_kp_bounds(arr: xr.DataArray):
     psi = float(arr.coords["psi"]) - arr.S.psi_offset
 
     kinetic_energy = arr.S.hv - arr.S.work_function
-    kps = (
-        arpes.constants.K_INV_ANGSTROM
-        * np.sqrt(kinetic_energy)
-        * np.sin(phi)
-        * np.cos(psi)
-    )
+    kps = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi) * np.cos(psi)
 
     return round(np.min(kps), 2), round(np.max(kps), 2)
 
 
-#def calculate_kx_ky_bounds(arr: xr.DataArray):
-#    """Calculates the kx and ky range for a dataset with a fixed photon energy.
+# def calculate_kx_ky_bounds(arr: xr.DataArray):
+#     """Calculates the kx and ky range for a dataset with a fixed photon energy.
 
-#    This is used to infer the gridding that should be used for a k-space conversion.
-#    Based on Jonathan Denlinger's old codes
+#     This is used to infer the gridding that should be used for a k-space conversion.
+#     Based on Jonathan Denlinger's old codes
 
-#    Args:
-#        arr: Dataset that includes a key indicating the photon energy of
-#          the scan
+#     Args:
+#         arr: Dataset that includes a key indicating the photon energy of
+#           the scan
 
-#    Returns:
-#        ((kx_low, kx_high,), (ky_low, ky_high,))
-#    """
-#    phi_coords, beta_coords = (
-#        arr.coords["phi"] - arr.S.phi_offset,
-#        arr.coords["beta"] - arr.S.beta_offset,
-#    )
+#     Returns:
+#         ((kx_low, kx_high,), (ky_low, ky_high,))
+#     """
+#     phi_coords, beta_coords = (
+#         arr.coords["phi"] - arr.S.phi_offset,
+#         arr.coords["beta"] - arr.S.beta_offset,
+#     )
 
-    # Sample hopefully representatively along the edges
-#    phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
-#    beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
-#    phi_mid = (phi_high + phi_low) / 2
-#    beta_mid = (beta_high + beta_low) / 2
+#     # Sample hopefully representatively along the edges
+#     phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
+#     beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
+#     phi_mid = (phi_high + phi_low) / 2
+#     beta_mid = (beta_high + beta_low) / 2
 
-#    sampled_phi_values = np.array(
-#        [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high]
-#    )
-#    sampled_beta_values = np.array(
-#        [
-#            beta_mid,
-#            beta_high,
-#            beta_high,
-#            beta_high,
-#            beta_mid,
-#            beta_low,
-#            beta_low,
-#            beta_low,
-#            beta_mid,
-#        ]
-#    )
-#    kinetic_energy = arr.S.hv - arr.S.work_function
+#     sampled_phi_values = np.array(
+#         [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high]
+#     )
+#     sampled_beta_values = np.array(
+#         [
+#             beta_mid,
+#             beta_high,
+#             beta_high,
+#             beta_high,
+#             beta_mid,
+#             beta_low,
+#             beta_low,
+#             beta_low,
+#             beta_mid,
+#         ]
+#     )
+#     kinetic_energy = arr.S.hv - arr.S.work_function
 
-#    kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
-#    kys = (
-#        arpes.constants.K_INV_ANGSTROM
-#        * np.sqrt(kinetic_energy)
-#        * np.cos(sampled_phi_values)
-#        * np.sin(sampled_beta_values)
-#    )
+#     kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
+#     kys = (
+#         arpes.constants.K_INV_ANGSTROM
+#         * np.sqrt(kinetic_energy)
+#         * np.cos(sampled_phi_values)
+#         * np.sin(sampled_beta_values)
+#     )
 
-#    return (
-#        (round(np.min(kxs), 2), round(np.max(kxs), 2)),
-#        (round(np.min(kys), 2), round(np.max(kys), 2)),
-#    )
+#     return (
+#         (round(np.min(kxs), 2), round(np.max(kxs), 2)),
+#         (round(np.min(kys), 2), round(np.max(kys), 2)),
+#     )
 
 
 def calculate_kx_ky_bounds(arr: xr.DataArray):
     phi_coords, psi_coords = (
-        arr.coords['phi'] - arr.S.phi_offset,
-        arr.coords['psi'] - arr.S.psi_offset
-    ) 
-    phi_coords, psi_coords = (
-        phi_coords.data, psi_coords.data
+        arr.coords["phi"] - arr.S.phi_offset,
+        arr.coords["psi"] - arr.S.psi_offset,
     )
-    
-    phi, psi = np.meshgrid(*(phi_coords, psi_coords), indexing='ij')
+    phi_coords, psi_coords = (phi_coords.data, psi_coords.data)
+
+    phi, psi = np.meshgrid(*(phi_coords, psi_coords), indexing="ij")
     kinetic_energy = arr.S.hv - arr.S.work_function
 
     kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi)
