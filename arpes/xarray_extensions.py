@@ -1180,7 +1180,9 @@ class ARPESAccessorBase:
 
         return obj
 
-    def fat_sel(self, widths: Optional[Dict[str, Any]] = None, **kwargs) -> xr.DataArray:
+    def fat_sel(
+        self, widths: Optional[Dict[str, Any]] = None, method=None, **kwargs
+    ) -> xr.DataArray:
         """Allows integrating a selection over a small region.
 
         The produced dataset will be normalized by dividing by the number
@@ -1217,18 +1219,32 @@ class ARPESAccessorBase:
             for k in slice_kwargs
         }
 
-        slices = {
-            k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
-            for k, v in slice_kwargs.items()
-        }
+        slices = dict()
+        selection = dict()
+        for k, v in slice_kwargs.items():
+            if slice_widths[k] == 0:
+                selection[k] = v
+            else:
+                slices[k] = slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
+        # slices = {
+        #     k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
+        #     for k, v in slice_kwargs.items()
+        # }
+        if selection != {}:
+            selected = self._obj.sel(**selection, method=method)
+        else:
+            selected = self._obj
+            
+        if slices != {}:
+            sliced = selected.sel(**slices)
+            thickness = np.product([len(sliced.coords[k]) for k in slice_kwargs.keys()])
+            normalized = sliced.sum(slices.keys(), keep_attrs=True, min_count=1) / thickness
+            for k, v in slices.items():
+                normalized.coords[k] = (v.start + v.stop) / 2
+            normalized.attrs.update(self._obj.attrs.copy())
+        else:
+            normalized = selected
 
-        sliced = self._obj.sel(**slices)
-        thickness = np.product([len(sliced.coords[k]) for k in slice_kwargs.keys()])
-        normalized = sliced.sum(slices.keys(),
-                                keep_attrs=True, min_count=1) / thickness
-        for k, v in slices.items():
-            normalized.coords[k] = (v.start + v.stop) / 2
-        normalized.attrs.update(self._obj.attrs.copy())
         return normalized
 
     @property
@@ -1768,26 +1784,32 @@ class ARPESAccessorBase:
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
-    def plot(self, *args, rasterized=True, **kwargs):
-        """Utility delegate to `xr.DataArray.plot` which rasterizes."""
-        if len(self._obj.dims) == 2:
-            kwargs["rasterized"] = rasterized
+    def plot(self, *args, **kwargs):
+        from erlab.plotting import plot_array
 
-        with plt.rc_context(rc={"text.usetex": False}):
+        if len(self._obj.dims) == 2:
+            return plot_array(self._obj, *args, **kwargs)
+        else:
+            # with plt.rc_context({"text.usetex": False}):
             self._obj.plot(*args, **kwargs)
 
-    def show(self, detached=False, **kwargs):
+    def show(self, *args, **kwargs):
         """Opens the Qt based image tool."""
-        import arpes.plotting.qt_tool
+        # import arpes.plotting.qt_tool
+        from erlab.plotting import itool
 
-        arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached, **kwargs)
+        # arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached,
+        # **kwargs)
+        return itool(self._obj, *args, **kwargs)
 
     def show_d2(self, **kwargs):
         """Opens the Bokeh based second derivative image tool."""
-        from arpes.plotting.all import CurvatureTool
+        # from arpes.plotting.all import CurvatureTool
+        from erlab.plotting import noisetool
 
-        curve_tool = CurvatureTool(**kwargs)
-        return curve_tool.make_tool(self._obj)
+        # curve_tool = CurvatureTool(**kwargs)
+        # return curve_tool.make_tool(self._obj)
+        return noisetool(self._obj)
 
     def show_band_tool(self, **kwargs):
         """Opens the Bokeh based band placement tool."""
@@ -1876,10 +1898,10 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         Returns:
             A copy of the data with nans filled in.
         """
-        data = self._obj.copy(deep=True)
-        assert isinstance(data, xr.DataArray)
-        data.values[np.isnan(data.values)] = x
-        return data
+        # data = self._obj.copy(deep=True)
+        # assert isinstance(data, xr.DataArray)
+        # data.values[np.isnan(data.values)] = x
+        return self._obj.fillna(x)
 
     def reference_plot(self, **kwargs) -> plt.Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
@@ -1982,10 +2004,11 @@ class GenericAccessorTools:
         ]
 
     def drop_nan(self):
-        assert len(self._obj.dims) == 1
+        # assert len(self._obj.dims) == 1
 
-        mask = np.logical_not(np.isnan(self._obj.values))
-        return self._obj.isel(**dict([[self._obj.dims[0], mask]]))
+        # mask = np.logical_not(np.isnan(self._obj.values))
+        # return self._obj.isel(**dict([[self._obj.dims[0], mask]]))
+        return self._obj.isel.dropna(self._obj.dims[0])
 
     def shift_coords(self, dims, shift):
         if not isinstance(shift, np.ndarray):
@@ -2647,7 +2670,7 @@ class ARPESFitToolsAccessor:
             if model_result_instance is None:
                 return np.nan
 
-            return (model_result_instance.residual ** 2).mean()
+            return (model_result_instance.residual**2).mean()
 
         return self._obj.G.map(safe_error)
 
