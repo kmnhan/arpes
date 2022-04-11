@@ -11,7 +11,6 @@ import dill
 __all__ = ["MPWorker"]
 
 
-@dataclass
 class MPWorker:
     """Worker for performing curve fitting on a high dimensional dataset.
 
@@ -27,22 +26,29 @@ class MPWorker:
     IPC whenever we use multiprocessing.
     """
 
-    data: xr.DataArray
-    uncompiled_model: Any
-
-    prefixes: Optional[List[str]]
-    params: Any
-
-    safe: bool = False
-    serialize: bool = False
-    weights: Optional[xr.DataArray] = None
-    window: Optional[xr.DataArray] = None
-
-    _model: Any = field(init=False)
-
-    def __post_init__(self):
-        """Indicate that the model has not been compiled yet."""
+    def __init__(
+        self,
+        data: xr.DataArray,
+        uncompiled_model: Any,
+        prefixes: Optional[List[str]],
+        params: Any,
+        safe: bool = False,
+        serialize: bool = False,
+        weights: Optional[xr.DataArray] = None,
+        window: Optional[xr.DataArray] = None,
+        # _model: Any = field(init=False),
+        **kwargs
+    ):
+        self.data = data
+        self.uncompiled_model = uncompiled_model
+        self.prefixes = prefixes
+        self.params = params
+        self.safe = safe
+        self.serialize = serialize
+        self.weights = weights
+        self.window = window
         self._model = None
+        self.kwargs = kwargs
 
     @property
     def model(self):
@@ -85,7 +91,9 @@ class MPWorker:
             weights_for = self.weights.sel(**cut_coords)
 
         try:
-            fit_result = self.model.guess_fit(cut_data, params=current_params, weights=weights_for)
+            fit_result = self.model.guess_fit(
+                cut_data, params=current_params, weights=weights_for, **self.kwargs
+            )
         except ValueError:
             fit_result = None
 

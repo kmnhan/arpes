@@ -118,6 +118,7 @@ def broadcast_model(
     window=None,
     parallelize=None,
     trace: Callable = None,
+    **kwargs
 ):
     """Perform a fit across a number of dimensions.
 
@@ -187,6 +188,7 @@ def broadcast_model(
         serialize=serialize,
         weights=weights,
         window=window,
+        **kwargs,
     )
 
     if parallelize:
