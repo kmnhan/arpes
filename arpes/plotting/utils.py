@@ -1202,6 +1202,7 @@ def name_for_dim(dim_name, escaped=True):
             "alpha": "α",
             "psi": "ψ",
             "phi": "φ",
+            "Eb": "E-E_F",
             "eV": "E",
             "kx": "Kx",
             "ky": "Ky",
@@ -1210,9 +1211,10 @@ def name_for_dim(dim_name, escaped=True):
             "hv": "Photon Energy",
         }.get(dim_name)
 
+    if name is None:
+        name = dim_name
     if not escaped:
         name = name.replace("$", "")
-
     return name
 
 
@@ -1220,21 +1222,21 @@ def unit_for_dim(dim_name, escaped=True):
     """Calculate LaTeX or fancy display label for the unit associated to a dimension."""
     if plt.rcParams.get('text.usetex'):
         unit = {
-            "temperature": r"\textrm{K}",
-            "T": r"\textrm{K}",
-            "theta": r"\textrm{rad}",
-            "beta": r"\textrm{rad}",
-            "psi": r"\textrm{rad}",
-            "chi": r"\textrm{rad}",
-            "alpha": r"\textrm{rad}",
-            "phi": r"\textrm{rad}",
-            "Eb": r"\textrm{meV}",
-            "eV": r"\textrm{eV}",
-            "kx": r"\textrm{Å}\ensuremath{{}^{-1}}",
-            "ky": r"\textrm{Å}\ensuremath{{}^{-1}}",
-            "kz": r"\textrm{Å}\ensuremath{{}^{-1}}",
-            "kp": r"\textrm{Å}\ensuremath{{}^{-1}}",
-            "hv": r"\textrm{eV}",
+            "temperature": r"K",
+            "T": r"K",
+            "theta": r"rad",
+            "beta": r"rad",
+            "psi": r"rad",
+            "chi": r"rad",
+            "alpha": r"rad",
+            "phi": r"rad",
+            "Eb": r"eV",
+            "eV": r"eV",
+            "kx": r"Å\ensuremath{{}^{-1}}",
+            "ky": r"Å\ensuremath{{}^{-1}}",
+            "kz": r"Å\ensuremath{{}^{-1}}",
+            "kp": r"Å\ensuremath{{}^{-1}}",
+            "hv": r"eV",
         }.get(dim_name)
     else:
         unit = {
@@ -1251,8 +1253,10 @@ def unit_for_dim(dim_name, escaped=True):
             "kz": r"1/Å",
             "kp": r"1/Å",
             "hv": r"eV",
+            "Eb": r"eV",
         }.get(dim_name)
-
+    if unit is None:
+        unit = ''
     if not escaped:
         unit = unit.replace("$", "")
 
@@ -1312,8 +1316,6 @@ def label_for_dim(data=None, dim_name=None, escaped=True):
             "kinetic": r"Kinetic Energy (eV)",
             "temp": r"Temperature",
             "kp": r"$k_\parallel$~(Å${}^{-1}$)",
-            # "kx": r"$k_\text{x}$",
-            # "ky": r"$k_\text{y}$",
             "kx": r"$k_{x}$~(Å${}^{-1}$)",
             "ky": r"$k_{y}$~(Å${}^{-1}$)",
             # "kz": r"$k_\perp$",
@@ -1337,10 +1339,10 @@ def label_for_dim(data=None, dim_name=None, escaped=True):
             "angle": "Interp. Angle",
             "kinetic": "Kinetic Energy (eV)",
             "temp": "Temperature (K)",
-            "kp": "Kp",
-            "kx": "Kx",
-            "ky": "Ky",
-            "kz": "Kz",
+            "kp": "$k_p$",
+            "kx": "$k_x$",
+            "ky": "$k_y$",
+            "kz": "$k_z$",
             "hv": "Photon Energy (eV)",
             "x": "X (mm)",
             "y": "Y (mm)",
