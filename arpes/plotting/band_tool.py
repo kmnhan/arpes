@@ -326,11 +326,15 @@ class BandTool(SaveableTool, CursorTool):
         self.add_band_button.on_click(lambda: add_band(self.band_name_input.value))
         self.clear_band_button.on_click(on_clear_band)
         self.remove_band_button.on_click(on_remove_band)
-        self.center_float_copy.on_click(on_copy_center_float)
-        self.center_float_widget.on_change(set_center_float_value)
-        self.direction_dropdown.on_click(set_fit_direction)
-        self.fit_mode_dropdown.on_click(set_fit_mode)
-        self.band_type_dropdown.on_click(set_band_type)
+        try:
+            self.center_float_copy.on_click(on_copy_center_float)
+            self.center_float_widget.on_change(set_center_float_value)
+            self.direction_dropdown.on_click(set_fit_direction)
+            self.fit_mode_dropdown.on_click(set_fit_mode)
+        
+            self.band_type_dropdown.on_click(set_band_type)
+        except TypeError:
+            pass
 
         layout = row(
             column(figures["main"]),
