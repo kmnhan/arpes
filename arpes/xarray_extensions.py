@@ -55,7 +55,7 @@ import xarray as xr
 from scipy import ndimage as ndi
 
 import arpes.constants
-import arpes.plotting.all as plotting
+import arpes.plotting as plotting
 
 from arpes.analysis.general import rebin
 from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
@@ -629,11 +629,6 @@ class ARPESAccessorBase:
 
         return self._calculate_symmetry_points(symmetry_points, **kwargs)
 
-    def apply_symmetry_points(self, **kwargs):
-        old_symmetry_points = self._obj.attrs.get("symmetry_points", {})
-        old_symmetry_points.update(kwargs)
-        self._obj.attrs["symmetry_points"] = old_symmetry_points
-
     @property
     def iter_own_symmetry_points(self):
         sym_points, _ = self.symmetry_points()
@@ -826,13 +821,13 @@ class ARPESAccessorBase:
     def with_rotation_offset(self, offset: float):
         """Temporarily rotates the chi_offset by `offset`."""
         old_chi_offset = self.offsets.get("chi", 0)
-        self.apply_offsets(**{"chi": old_chi_offset + offset})
+        self.apply_offsets({"chi": old_chi_offset + offset})
 
         yield old_chi_offset + offset
 
-        self.apply_offsets(**{"chi": old_chi_offset})
+        self.apply_offsets({"chi": old_chi_offset})
 
-    def apply_offsets(self, **offsets):
+    def apply_offsets(self, offsets):
         for k, v in offsets.items():
             self._obj.attrs["{}_offset".format(k)] = v
 
@@ -1208,7 +1203,6 @@ class ARPESAccessorBase:
             "eV": 0.05,
             "phi": 2,
             "beta": 2,
-            "psi": 2,
             "theta": 2,
             "kx": 0.02,
             "ky": 0.02,
@@ -1719,7 +1713,7 @@ class ARPESAccessorBase:
                 remove_colorbars()
 
         else:
-            if 1 <= self._obj.ndim < 3:
+            if 1 <= len(self._obj.dims) < 3:
                 fig, ax = plt.subplots(1, 1, figsize=(4, 3))
                 self._obj.plot(ax=ax)
                 fancy_labels(ax)
@@ -1774,28 +1768,13 @@ class ARPESAccessorBase:
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
 
-    def plot(self, *args, **kwargs):
+    def plot(self, *args, rasterized=True, **kwargs):
         """Utility delegate to `xr.DataArray.plot` which rasterizes."""
-        assert self._obj.ndim != 1
-        cmap = kwargs.pop("cmap", plt.cm.terrain_r)
-        add_colorbar = kwargs.pop("add_colorbar", False)
-
-        if self._obj.ndim == 2:
-            y = "eV" if "eV" in self._obj.dims else None
-        elif self._obj.ndim == 3:
-            y = "eV"
-            kwargs["col"] = "psi"
-            if "col_wrap" not in kwargs:
-                kwargs["col_wrap"] = 5
+        if len(self._obj.dims) == 2:
+            kwargs["rasterized"] = rasterized
 
         with plt.rc_context(rc={"text.usetex": False}):
-            return self._obj.plot(
-                y=y,
-                rasterized=True,
-                cmap=cmap,
-                add_colorbar=add_colorbar,
-                *args, **kwargs
-            )
+            self._obj.plot(*args, **kwargs)
 
     def show(self, detached=False, **kwargs):
         """Opens the Qt based image tool."""
@@ -1887,6 +1866,20 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
                 pass
 
         return self._obj.isel(**slices)
+
+    def nan_to_num(self, x: Any = 0) -> xr.DataArray:
+        """Provides an `xarray` version of `numpy.nan_to_num`.
+
+        Args:
+            x: The fill value
+
+        Returns:
+            A copy of the data with nans filled in.
+        """
+        data = self._obj.copy(deep=True)
+        assert isinstance(data, xr.DataArray)
+        data.values[np.isnan(data.values)] = x
+        return data
 
     def reference_plot(self, **kwargs) -> plt.Axes:
         """Generates a reference plot for this piece of data according to its spectrum type.
@@ -1989,7 +1982,7 @@ class GenericAccessorTools:
         ]
 
     def drop_nan(self):
-        assert self._obj.ndim == 1
+        assert len(self._obj.dims) == 1
 
         mask = np.logical_not(np.isnan(self._obj.values))
         return self._obj.isel(**dict([[self._obj.dims[0], mask]]))
@@ -2069,7 +2062,7 @@ class GenericAccessorTools:
         Returns:
             An array which consists of the mapping c => c.
         """
-        assert self._obj.ndim == 1
+        assert len(self._obj.dims) == 1
 
         d = self._obj.dims[0]
         if as_coordinate_name is None:
@@ -2136,7 +2129,7 @@ class GenericAccessorTools:
         Returns:
             A tuple of the coordinate array (first index) and the data array (second index)
         """
-        assert self._obj.ndim == 1
+        assert len(self._obj.dims) == 1
 
         return (self._obj.coords[self._obj.dims[0]].values, self._obj.values)
 
