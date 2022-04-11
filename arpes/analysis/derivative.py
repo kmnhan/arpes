@@ -3,6 +3,7 @@ import functools
 import warnings
 
 import numpy as np
+import numba
 
 import xarray as xr
 from arpes.provenance import provenance, update_provenance
@@ -17,7 +18,6 @@ __all__ = (
     "minimum_gradient",
     "vector_diff",
 )
-
 
 def vector_diff(arr: np.ndarray, delta, n=1):
     """Computes finite differences along the vector delta, given as a tuple.
@@ -66,7 +66,6 @@ def minimum_gradient(data: DataType, delta=1):
     new.values[np.isnan(new.values)] = 0
     return new
 
-
 @update_provenance("Gradient Modulus")
 def gradient_modulus(data: DataType, delta=1):
     spectrum = normalize_to_spectrum(data)
@@ -87,7 +86,7 @@ def gradient_modulus(data: DataType, delta=1):
     return data_copy
 
 
-def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
+def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None, values=False):
     r"""Provides "curvature" analysis for band locations.
 
     Defined via
@@ -142,24 +141,26 @@ def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
     np.nan_to_num(dfx, copy=False)
     np.nan_to_num(dfy, copy=False)
 
-    mdfdx, mdfdy = np.max(np.abs(dfx)), np.max(np.abs(dfy))
+    # mdfdx, mdfdy = np.max(np.abs(dfx)), np.max(np.abs(dfy))
 
-    cy = (dy / dx) * (mdfdx ** 2 + mdfdy ** 2) * alpha
-    cx = (dx / dy) * (mdfdx ** 2 + mdfdy ** 2) * alpha
+    # cy = (dy / dx) * (mdfdx ** 2 + mdfdy ** 2) * alpha
+    # cx = (dx / dy) * (mdfdx ** 2 + mdfdy ** 2) * alpha
+    cy = (alpha ** 2) * (dy **2)
+    cx = (alpha ** 2) * (dx **2)
 
     dfx_2, dfy_2 = np.power(dfx, 2), np.power(dfy, 2)
     d2fy = np.gradient(dfy, dy, axis=axis_indices[1])
     d2fx = np.gradient(dfx, dx, axis=axis_indices[0])
     d2fxy = np.gradient(dfx, dy, axis=axis_indices[1])
 
-    denom = np.power((1 + cx * dfx_2 + cy * dfy_2), 1.5)
-    numerator = (
+    curv = (
         (1 + cx * dfx_2) * cy * d2fy
         - 2 * cx * cy * dfx * dfy * d2fxy
         + (1 + cy * dfy_2) * cx * d2fx
-    )
-
-    curv = xr.DataArray(numerator / denom, arr.coords, arr.dims, attrs=arr.attrs)
+    ) / np.power((1 + cx * dfx_2 + cy * dfy_2), 1.5)
+    if values:
+        return curv
+    curv = xr.DataArray(curv, arr.coords, arr.dims, attrs=arr.attrs)
 
     if "id" in curv.attrs:
         del curv.attrs["id"]
@@ -176,7 +177,7 @@ def curvature(arr: xr.DataArray, directions=None, alpha=1, beta=None):
     return curv
 
 
-def dn_along_axis(arr: xr.DataArray, axis=None, smooth_fn=None, order=2) -> xr.DataArray:
+def dn_along_axis(arr: xr.DataArray, axis=None, smooth_fn=None, order=2):
     """Like curvature, performs a second derivative.
 
     You can pass a function to use for smoothing through
