@@ -242,7 +242,7 @@ def slice_along_path(
         if n_points is None:
             resolution = np.min([required_sampling_density(*segment) for segment in path_segments])
         else:
-            path_length / n_points
+            resolution = path_length / n_points
 
     def converter_for_coordinate_name(name):
         def raw_interpolator(*coordinates):
