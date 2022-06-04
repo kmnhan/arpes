@@ -93,6 +93,11 @@ def _iter_groups(grouped: Dict[str, Any]) -> Iterator[Any]:
 
 class ARPESAccessorBase:
     """Base class for the xarray extensions in PyARPES."""
+    
+    def max_norm(self, *args, **kwargs):
+        return self._obj / self._obj.max(*args, **kwargs)
+    def mean_norm(self, *args, **kwargs):
+        return self._obj / self._obj.mean(*args, **kwargs)
 
     def along(self, directions, **kwargs):
         return slice_along_path(self._obj, directions, **kwargs)
@@ -827,8 +832,10 @@ class ARPESAccessorBase:
 
         self.apply_offsets({"chi": old_chi_offset})
 
-    def apply_offsets(self, offsets):
+    def apply_offsets(self, offsets, radians=True):
         for k, v in offsets.items():
+            if not radians:
+                v = np.deg2rad(v)
             self._obj.attrs["{}_offset".format(k)] = v
 
     @property
@@ -1304,6 +1311,7 @@ class ARPESAccessorBase:
             "slit": {
                 "slit",
                 "slit_plate",
+                "slit_number",
             },
         }
         settings = {}
@@ -1590,6 +1598,7 @@ class ARPESAccessorBase:
             "T1",
             "temp",
             "temp_sample",
+            "temperature",
             "temp_cryotip",
             "temperature_sensor_b",
             "temperature_sensor_a",
@@ -1624,8 +1633,8 @@ class ARPESAccessorBase:
             )
             return df
 
-    def generic_fermi_surface(self, fermi_energy):
-        return self.fat_sel(eV=fermi_energy)
+    def generic_fermi_surface(self, fermi_energy, width=0.05):
+        return self.fat_sel(eV=fermi_energy, eV_width=width)
 
     @property
     def fermi_surface(self):
@@ -1783,11 +1792,12 @@ class ARPESAccessorBase:
 @xr.register_dataarray_accessor("S")
 class ARPESDataArrayAccessor(ARPESAccessorBase):
     """Spectrum related accessor for `xr.DataArray`."""
+    
 
     def plot(self, *args, **kwargs):
-        from erlab.plotting import plot_array
 
         if len(self._obj.dims) == 2:
+            from erlab.plotting import plot_array
             return plot_array(self._obj, *args, **kwargs)
         else:
             # with plt.rc_context({"text.usetex": False}):
