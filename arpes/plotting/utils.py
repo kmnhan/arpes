@@ -1303,7 +1303,7 @@ def label_for_dim(data=None, dim_name=None, escaped=True):
     """Generates a fancy label (LaTeX, if available) for a dimension according to standard conventions."""
     if plt.rcParams.get('text.usetex'):
         raw_dim_names = {
-            "temperature": "Temperature",
+            "temperature": "$T$ (K)",
             "theta": r"$\theta$",
             "beta": r"$\beta$",
             "chi": r"$\chi$",
@@ -1311,19 +1311,19 @@ def label_for_dim(data=None, dim_name=None, escaped=True):
             "psi": r"$\psi$",
             "phi": r"$\varphi$",
             # "eV": r"Binding Energy (eV)",
-            "eV": r'$E-E_F$~(eV)',
+            "eV": r'$E-E_F$ (eV)',
             "angle": r"Interp. Angle",
             "kinetic": r"Kinetic Energy (eV)",
             "temp": r"Temperature",
-            "kp": r"$k_\parallel$~(Å${}^{-1}$)",
-            "kx": r"$k_{x}$~(Å${}^{-1}$)",
-            "ky": r"$k_{y}$~(Å${}^{-1}$)",
+            "kp": r"$k_\parallel$ (Å${}^{-1}$)",
+            "kx": r"$k_{x}$ (Å${}^{-1}$)",
+            "ky": r"$k_{y}$ (Å${}^{-1}$)",
             # "kz": r"$k_\perp$",
-            "kz": r"$k_{z}$~(Å${}^{-1}$)",
+            "kz": r"$k_{z}$ (Å${}^{-1}$)",
             "hv": "Photon Energy (eV)",
-            "x": "X (mm)",
-            "y": "Y (mm)",
-            "z": "Z (mm)",
+            "x": "$x$ (mm)",
+            "y": "$y$ (mm)",
+            "z": "$z$ (mm)",
             "spectrum": "Intensity (arb.)",
         }
     else:
