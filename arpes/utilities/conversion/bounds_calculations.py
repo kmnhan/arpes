@@ -17,7 +17,9 @@ __all__ = (
 )
 
 
-def full_angles_to_k(kinetic_energy, phi, psi, alpha, beta, theta, chi, inner_potential):
+def full_angles_to_k(
+    kinetic_energy, phi, psi, alpha, beta, theta, chi, inner_potential
+):
     """Converts from the full set of standard PyARPES angles to momentum.
 
     More details on angle to momentum conversion can be found at
@@ -88,9 +90,18 @@ def full_angles_to_k(kinetic_energy, phi, psi, alpha, beta, theta, chi, inner_po
 def euler_to_kx(kinetic_energy, phi, beta, theta=0, slit_is_vertical=False):
     """Calculates kx from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
-        return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(beta) * np.cos(phi)
+        return (
+            arpes.constants.K_INV_ANGSTROM
+            * np.sqrt(kinetic_energy)
+            * np.sin(beta)
+            * np.cos(phi)
+        )
     else:
-        return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi + theta)
+        return (
+            arpes.constants.K_INV_ANGSTROM
+            * np.sqrt(kinetic_energy)
+            * np.sin(phi + theta)
+        )
 
 
 def euler_to_ky(kinetic_energy, phi, beta, theta=0, slit_is_vertical=False):
@@ -109,10 +120,14 @@ def euler_to_ky(kinetic_energy, phi, beta, theta=0, slit_is_vertical=False):
         )
 
 
-def euler_to_kz(kinetic_energy, phi, beta, theta=0, inner_potential=10, slit_is_vertical=False):
+def euler_to_kz(
+    kinetic_energy, phi, beta, theta=0, inner_potential=10, slit_is_vertical=False
+):
     """Calculates kz from the phi/beta Euler angles given the experimental geometry."""
     if slit_is_vertical:
-        beta_term = -np.sin(theta) * np.sin(phi) + np.cos(theta) * np.cos(beta) * np.cos(phi)
+        beta_term = -np.sin(theta) * np.sin(phi) + np.cos(theta) * np.cos(
+            beta
+        ) * np.cos(phi)
 
     else:
         beta_term = np.cos(phi + theta) * np.cos(beta)
@@ -122,14 +137,26 @@ def euler_to_kz(kinetic_energy, phi, beta, theta=0, inner_potential=10, slit_is_
     )
 
 
-def spherical_to_kx(kinetic_energy: np.ndarray, theta: np.float64, phi: np.ndarray) -> np.ndarray:
+def spherical_to_kx(
+    kinetic_energy: np.ndarray, theta: np.float64, phi: np.ndarray
+) -> np.ndarray:
     """Calculates kx from the sample spherical (emission, not measurement) coordinates."""
-    return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.cos(phi)
+    return (
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
+        * np.sin(theta)
+        * np.cos(phi)
+    )
 
 
 def spherical_to_ky(kinetic_energy, theta, phi):
     """Calculates ky from the sample spherical (emission, not measurement) coordinates."""
-    return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(theta) * np.sin(phi)
+    return (
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
+        * np.sin(theta)
+        * np.sin(phi)
+    )
 
 
 def spherical_to_kz(
@@ -148,7 +175,9 @@ def spherical_to_kz(
     Returns:
         The out of plane momentum, kz.
     """
-    return arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy * np.cos(theta) ** 2 + inner_V)
+    return arpes.constants.K_INV_ANGSTROM * np.sqrt(
+        kinetic_energy * np.cos(theta) ** 2 + inner_V
+    )
 
 
 def calculate_kp_kz_bounds(arr: xr.DataArray):
@@ -189,7 +218,12 @@ def calculate_kp_bounds(arr: xr.DataArray):
     psi = float(arr.coords["psi"]) - arr.S.psi_offset
 
     kinetic_energy = arr.S.hv - arr.S.work_function
-    kps = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi) * np.cos(psi)
+    kps = (
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
+        * np.sin(phi)
+        * np.cos(psi)
+    )
 
     return round(np.min(kps), 2), round(np.max(kps), 2)
 
@@ -207,70 +241,59 @@ def calculate_kx_ky_bounds(arr: xr.DataArray):
     Returns:
         ((kx_low, kx_high,), (ky_low, ky_high,))
     """
-    
-    if "beta" in arr.dims:
-        
-        phi_coords, beta_coords = (
-            arr.coords["phi"] - arr.S.phi_offset,
-            arr.coords["beta"] - arr.S.beta_offset,
-        )
 
-        # Sample hopefully representatively along the edges
-        phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
-        beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
-        phi_mid = (phi_high + phi_low) / 2
-        beta_mid = (beta_high + beta_low) / 2
-
-        sampled_phi_values = np.array(
-            [phi_high, phi_high, phi_mid, phi_low, phi_low, phi_low, phi_mid, phi_high, phi_high]
-        )
-        sampled_beta_values = np.array(
-            [
-                beta_mid,
-                beta_high,
-                beta_high,
-                beta_high,
-                beta_mid,
-                beta_low,
-                beta_low,
-                beta_low,
-                beta_mid,
-            ]
-        )
-        kinetic_energy = arr.S.hv - arr.S.work_function
-
-        kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(sampled_phi_values)
-        kys = (
-            arpes.constants.K_INV_ANGSTROM
-            * np.sqrt(kinetic_energy)
-            * np.cos(sampled_phi_values)
-            * np.sin(sampled_beta_values)
-        )
-
-        return (
-            (round(np.min(kxs), 2), round(np.max(kxs), 2)),
-            (round(np.min(kys), 2), round(np.max(kys), 2)),
-        )
-    elif "psi" in arr.dims:
-        phi_coords, psi_coords = (
-            arr.coords["phi"] - arr.S.phi_offset,
-            arr.coords["psi"] - arr.S.psi_offset,
-        )
-    elif "theta" in arr.dims:
-        phi_coords, psi_coords = (
-            arr.coords["phi"] - arr.S.phi_offset,
-            arr.coords["theta"] - arr.S.theta_offset,
-        )
-    phi_coords, psi_coords = (phi_coords.data, psi_coords.data)
-
-    phi, psi = np.meshgrid(*(phi_coords, psi_coords), indexing="ij")
-    kinetic_energy = arr.S.hv - arr.S.work_function
-
-    kxs = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.sin(phi)
-    kys = -1 * arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy) * np.cos(phi) * np.sin(psi)
-
-    return (
-        (round(kxs.min(), 2), round(kxs.max(), 2)),
-        (round(kys.min(), 2), round(kys.max(), 2)),
+    phi_coords, beta_coords = (
+        arr.coords["phi"] - arr.S.phi_offset,
+        arr.coords["beta"] - arr.S.beta_offset,
     )
 
+    # Sample hopefully representatively along the edges
+    phi_low, phi_high = np.min(phi_coords), np.max(phi_coords)
+    beta_low, beta_high = np.min(beta_coords), np.max(beta_coords)
+    phi_mid = (phi_high + phi_low) / 2
+    beta_mid = (beta_high + beta_low) / 2
+
+    sampled_phi_values = np.array(
+        [
+            phi_high,
+            phi_high,
+            phi_mid,
+            phi_low,
+            phi_low,
+            phi_low,
+            phi_mid,
+            phi_high,
+            phi_high,
+        ]
+    )
+    sampled_beta_values = np.array(
+        [
+            beta_mid,
+            beta_high,
+            beta_high,
+            beta_high,
+            beta_mid,
+            beta_low,
+            beta_low,
+            beta_low,
+            beta_mid,
+        ]
+    )
+    kinetic_energy = arr.S.hv - arr.S.work_function
+
+    kxs = (
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
+        * np.sin(sampled_phi_values)
+    )
+    kys = (
+        arpes.constants.K_INV_ANGSTROM
+        * np.sqrt(kinetic_energy)
+        * np.cos(sampled_phi_values)
+        * np.sin(sampled_beta_values)
+    )
+
+    return (
+        (round(np.min(kxs), 2), round(np.max(kxs), 2)),
+        (round(np.min(kys), 2), round(np.max(kys), 2)),
+    )
