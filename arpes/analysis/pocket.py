@@ -49,10 +49,30 @@ def pocket_parameters(data: DataType, kf_method=None, sel=None, method_kwargs=No
     if "eV" in fs_dims:
         fs_dims.remove("eV")
 
-    locations = [
-        {d: ss[d].sel(angle=kf, eV=0, method="nearest").item() for d in fs_dims}
-        for kf, ss in zip(kfs, slices)
-    ]
+    try:
+        locations = [
+            {d: ss[d].sel(angle=kf, eV=0, method="nearest").item() for d in fs_dims}
+            for kf, ss in zip(kfs, slices)
+        ]
+    except KeyError:
+        try:
+            locations = [
+                {d: ss[d].sel(theta=kf, eV=0, method="nearest").item() for d in fs_dims}
+                for kf, ss in zip(kfs, slices)
+            ]
+        except KeyError:
+            try:
+                locations = [
+                    {d: ss[d].sel(beta=kf, eV=0, method="nearest").item() for d in fs_dims}
+                    for kf, ss in zip(kfs, slices)
+                ]
+            except KeyError:
+                locations = [
+                    {d: ss[d].sel(phi=kf, eV=0, method="nearest").item() for d in fs_dims}
+                    for kf, ss in zip(kfs, slices)
+                ]
+
+    
 
     location_vectors = [[coord[d] for d in fs_dims] for coord in locations]
     as_ndarray = np.array(location_vectors)
@@ -201,7 +221,15 @@ def curves_along_pocket(
 
     slices = [slice_at_angle(theta) for theta in angles]
 
-    max_ang = slices[0].coords["angle"].max().item()
+    try:
+        max_ang = slices[0].coords["angle"].max().item()
+    except KeyError:
+        try:
+            max_ang = slices[0].coords["theta"].max().item()
+        except KeyError:
+            max_ang = slices[0].coords["beta"].max().item()
+        
+        
 
     slices = [
         s.sel(angle=slice(max_ang * (1.0 * inner_radius / outer_radius), None)).isel(
@@ -280,11 +308,22 @@ def edcs_along_pocket(
     fs_dims = list(data.dims)
     if "eV" in fs_dims:
         fs_dims.remove("eV")
-
-    locations = [
-        {d: ss[d].sel(angle=kf, eV=0, method="nearest").item() for d in fs_dims}
-        for kf, ss in zip(kfs, slices)
-    ]
+    try:
+        locations = [
+            {d: ss[d].sel(angle=kf, eV=0, method="nearest").item() for d in fs_dims}
+            for kf, ss in zip(kfs, slices)
+        ]
+    except KeyError:
+        try:
+            locations = [
+                {d: ss[d].sel(theta=kf, eV=0, method="nearest").item() for d in fs_dims}
+                for kf, ss in zip(kfs, slices)
+            ]
+        except KeyError:
+            locations = [
+                {d: ss[d].sel(beta=kf, eV=0, method="nearest").item() for d in fs_dims}
+                for kf, ss in zip(kfs, slices)
+            ]
 
     edcs = [data.S.select_around(l, radius=select_radius, fast=True) for l in locations]
 
