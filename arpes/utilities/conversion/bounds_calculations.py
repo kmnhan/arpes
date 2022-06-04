@@ -74,10 +74,10 @@ def full_angles_to_k(
     in the perpendicular case, we need the value of the cos^2(zeta) for the polar declination
     angle zeta in the sample (emission) frame. The total in plane velocity v_parallel is proportional
     to sin(zeta), so by the trig identity:
-    
+
     1 = cos^2(zeta) + sin^2(zeta)
-    
-    we may substitute cos^2(zeta) for 1 - sin^2(zeta) which is 1 - (vrchi_x **2 + vrchi_y ** 2) above.  
+
+    we may substitute cos^2(zeta) for 1 - sin^2(zeta) which is 1 - (vrchi_x **2 + vrchi_y ** 2) above.
     """
     k_par = arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy)
     k_perp = arpes.constants.K_INV_ANGSTROM * np.sqrt(
@@ -217,7 +217,7 @@ def calculate_kp_bounds(arr: xr.DataArray):
     phi = arr.coords["phi"].values - arr.S.phi_offset
     psi = float(arr.coords["psi"]) - arr.S.psi_offset
 
-    kinetic_energy = arr.S.hv - arr.S.work_function
+    kinetic_energy = arr.coords["eV"].values.max()
     kps = (
         arpes.constants.K_INV_ANGSTROM
         * np.sqrt(kinetic_energy)
@@ -279,7 +279,7 @@ def calculate_kx_ky_bounds(arr: xr.DataArray):
             beta_mid,
         ]
     )
-    kinetic_energy = arr.S.hv - arr.S.work_function
+    kinetic_energy = arr.coords["eV"].values.max()
 
     kxs = (
         arpes.constants.K_INV_ANGSTROM
