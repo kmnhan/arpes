@@ -17,7 +17,7 @@ def r8000(slits):
         "type": "HEMISPHERE",
         "slits": slits,
         "radius": 200,
-        "angle_resolution": 0.1 * np.pi / 180,
+        "angle_resolution": np.deg2rad(0.1),
     }
 
 
