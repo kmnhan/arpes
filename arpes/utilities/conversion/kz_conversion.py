@@ -129,6 +129,17 @@ class ConvertKpKz(CoordinateConverter):
 
         if self.hv is None:
             self.kspace_to_hv(binding_energy, kp, kz, *args, **kwargs)
+            
+        if self.is_slit_vertical:
+            polar_angle = self.arr.S.lookup_offset_coord("theta") + self.arr.S.lookup_offset_coord(
+                "psi"
+            )
+            parallel_angle = self.arr.S.lookup_offset_coord("beta")
+        else:
+            polar_angle = self.arr.S.lookup_offset_coord("beta") + self.arr.S.lookup_offset_coord(
+                "psi"
+            )
+            parallel_angle = self.arr.S.lookup_offset_coord("theta")
 
         kinetic_energy = binding_energy + self.hv - self.arr.S.work_function
 
@@ -136,10 +147,10 @@ class ConvertKpKz(CoordinateConverter):
 
         _kp_to_polar(
             kinetic_energy,
-            kp,
+            kp / np.cos(polar_angle),
             self.phi,
             self.arr.S.inner_potential,
-            self.arr.S.phi_offset,
+            self.arr.S.phi_offset + parallel_angle,
         )
 
         try:
