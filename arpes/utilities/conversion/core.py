@@ -179,7 +179,7 @@ def slice_along_path(
 
     parsed_interpolation_points = [
         x
-        if isinstance(x, collections.Iterable) and not isinstance(x, str)
+        if np.iterable(x) and not isinstance(x, str)
         else extract_symmetry_point(x)
         for x in interpolation_points
     ]
