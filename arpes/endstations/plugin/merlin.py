@@ -112,34 +112,33 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
             r"([a-zA-Z0-9\w+_]+)_[S][0-9][0-9][0-9]\.pxt", Path(original_filename).name
         )
         if internal_match is not None:
-            if internal_match.groups():
+            if len(internal_match.groups()) > 0:
                 motors_path = str(
                     Path(original_filename).parent
                     / "{}_Motor_Pos.txt".format(internal_match.groups()[0])
                 )
-                try:
-                    with open(motors_path, "r") as f:
-                        lines = f.readlines()
+                
+                with open(motors_path, "r") as f:
+                    lines = f.readlines()
 
-                    axis_name = lines[0].strip()
-                    axis_name = self.RENAME_KEYS.get(axis_name, axis_name)
-                    values = [float(l.strip()) for l in lines[1 : len(frames) + 1]]
+                axis_names = lines[0].strip().split("\t")
+                axis_names = [self.RENAME_KEYS.get(n, n) for n in axis_names]
+                values = [l.strip().split("\t") for l in lines[1 : len(frames) + 1]]
+                
+                for v, f in zip(values, frames):
+                    for i, axis_name in enumerate(axis_names):
+                        f.coords[axis_name] = float(v[i])
 
-                    for v, f in zip(values, frames):
-                        f.coords[axis_name] = v
+                frames.sort(key=lambda x: x.coords[axis_name])
 
-                    frames.sort(key=lambda x: x.coords[axis_name])
+                for frame in frames:
+                    # promote x, y, z, and mesh curr. to coords so they get concatted
+                    for l in [frame] + frame.S.spectra:
+                        for c in ["x", "y", "z", "photon_flux"]:
+                            if c not in l.coords:
+                                l.coords[c] = l.attrs[c]
 
-                    for frame in frames:
-                        # promote x, y, z, and mesh curr. to coords so they get concatted
-                        for l in [frame] + frame.S.spectra:
-                            for c in ["x", "y", "z", "photon_flux"]:
-                                if c not in l.coords:
-                                    l.coords[c] = l.attrs[c]
-
-                    return xr.concat(frames, axis_name, coords="different")
-                except Exception:
-                    pass
+                return xr.concat(frames, axis_name, coords="different")
         else:
             internal_match = re.match(
                 r"([a-zA-Z0-9\w+_]+)_[R][0-9][0-9][0-9]\.pxt", Path(original_filename).name
