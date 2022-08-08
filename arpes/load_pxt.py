@@ -12,11 +12,15 @@ import xarray as xr
 
 from arpes.utilities.string import safe_decode
 from arpes.typing import DataType
+import igor.binarywave as ibw
+import igor.igorpy as igor
 
 Wave = Any  # really, igor.Wave but we do not assume installation
 
 __all__ = (
     "read_single_pxt",
+    "read_single_ibw",
+    "read_igor_binary_wave",
     "read_separated_pxt",
     "read_experiment",
     "find_ses_files_associated",
@@ -197,7 +201,7 @@ def wave_to_xarray(wave: Wave) -> xr.DataArray:
         coords=coords,
         dims=axis_names,
         attrs=read_header(wave.notes),
-    )
+    ).rename(wave.name)
 
 
 def read_experiment(reference_path: typing.Union[Path, str], **kwargs) -> xr.Dataset:
@@ -212,7 +216,7 @@ def read_experiment(reference_path: typing.Union[Path, str], **kwargs) -> xr.Dat
     Returns:
         The loaded dataset with only waves retained..
     """
-    import igor.igorpy as igor
+    
 
     if isinstance(reference_path, Path):
         reference_path = str(reference_path.absolute())
@@ -222,18 +226,17 @@ def read_experiment(reference_path: typing.Union[Path, str], **kwargs) -> xr.Dat
 
 def read_single_ibw(reference_path: typing.Union[Path, str]) -> Wave:
     """Uses igor.igorpy to load an .ibw file."""
-    import igor.igorpy as igor
-
+    
     if isinstance(reference_path, Path):
         reference_path = str(reference_path.absolute())
-    return igor.load(reference_path)
+    return ibw.load(reference_path)
 
 
 def read_single_pxt(
     reference_path: typing.Union[Path, str], byte_order=None, allow_multiple=False, raw=False
 ) -> xr.DataArray:
     """Uses igor.igorpy to load a single .PXT or .PXP file."""
-    import igor.igorpy as igor
+    
 
     if isinstance(reference_path, Path):
         reference_path = str(reference_path.absolute())
