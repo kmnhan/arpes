@@ -364,12 +364,13 @@ def stack_dispersion_plot(
                 palette = cm.get_cmap(palette)
             raw_colors = palette(np.abs(true_ys / max_over_stacks))
 
+        xs -= i * shift
+        lim = [max(lim[0], np.min(xs)), min(lim[1], np.max(xs))]
+        
         if transpose:
             xs, ys = ys, xs
 
-        xs = xs - i * shift
 
-        lim = [max(lim[0], np.min(xs)), min(lim[1], np.max(xs))]
 
         label_for = "_nolegend_"
         if not labeled:
