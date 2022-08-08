@@ -131,9 +131,9 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                     frames.sort(key=lambda x: x.coords[axis_name])
 
                     for frame in frames:
-                        # promote x, y, z to coords so they get concatted
+                        # promote x, y, z, and mesh curr. to coords so they get concatted
                         for l in [frame] + frame.S.spectra:
-                            for c in ["x", "y", "z"]:
+                            for c in ["x", "y", "z", "photon_flux"]:
                                 if c not in l.coords:
                                     l.coords[c] = l.attrs[c]
 
@@ -233,8 +233,15 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         for l in ls:
             if "slit_number" in l.attrs:
                 slit_lookup = {
-                    1: ("straight", 0.1),
-                    7: ("curved", 0.5),
+                    1: ("straight", 0.05),
+                    2: ("straight", 0.1),
+                    3: ("straight", 0.2),
+                    5: ("straight", 0.3),
+                    7: ("straight", 0.5),
+                    9: ("straight", 0.8),
+                    4: ("curved", 0.2),
+                    6: ("curved", 0.3),
+                    8: ("curved", 0.5),
                 }
                 shape, width = slit_lookup.get(l.attrs["slit_number"], (None, None))
                 l.attrs["slit_shape"] = shape
@@ -242,10 +249,10 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
             if "undulator_polarization" in l.attrs:
                 phase_angle_lookup = {
-                    0: (0, 0), # LH
-                    2: (np.pi / 2, 0), # LV
                     -1: (0, -np.pi / 4), # RC
-                    1: (0, np.pi / 4) # LC
+                    0: (0, 0), # LH
+                    1: (0, np.pi / 4), # LC
+                    2: (np.pi / 2, 0), # LV
                 }
                 polarization_theta, polarization_alpha = phase_angle_lookup[
                     int(l.attrs["undulator_polarization"])
