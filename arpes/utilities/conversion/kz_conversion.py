@@ -34,6 +34,19 @@ def _kp_to_polar(kinetic_energy, kp, phi, inner_potential, angle_offset):
             )
             + angle_offset
         )
+        
+@numba.njit
+def index_of_value(arr: np.array, v):
+    for idx, val in np.ndenumerate(arr):
+        if val == v:
+            return idx[0]
+    return -1
+        
+@numba.njit(parallel=True, cache=True)
+def _gen_polar_mesh(polar, hv, polar_mesh, hv_mesh):
+    for i in numba.prange(len(hv_mesh)):
+        polar_mesh[i] = polar[index_of_value(hv, hv_mesh[i])]
+    
 
 
 class ConvertKpKzV0(CoordinateConverter):
@@ -60,7 +73,7 @@ class ConvertKpKz(CoordinateConverter):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Cache the photon energy coordinate we calculate backwards from kz."""
-        super(ConvertKpKz, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.hv = None
         self.phi = None
 
@@ -73,7 +86,7 @@ class ConvertKpKz(CoordinateConverter):
         if bounds is None:
             bounds = {}
 
-        coordinates = super(ConvertKpKz, self).get_coordinates(resolution=resolution, bounds=bounds)
+        coordinates = super().get_coordinates(resolution=resolution, bounds=bounds)
 
         ((kp_low, kp_high), (kz_low, kz_high)) = calculate_kp_kz_bounds(self.arr)
         if "kp" in bounds:
@@ -144,7 +157,16 @@ class ConvertKpKz(CoordinateConverter):
         kinetic_energy = binding_energy + self.hv - self.arr.S.work_function
 
         self.phi = np.zeros_like(self.hv)
-
+        
+        if np.iterable(polar_angle):
+            if self.arr.hv.shape == polar_angle.shape:
+                # assuming hv-polar map
+                polar_mesh = np.empty_like(self.hv)
+                _gen_polar_mesh(polar_angle.values, self.arr.hv.values, polar_mesh, self.hv)
+                polar_angle = polar_mesh
+            else:
+                raise ValueError("Could not match polar dimensions to hv")
+        
         _kp_to_polar(
             kinetic_energy,
             kp / np.cos(polar_angle),
