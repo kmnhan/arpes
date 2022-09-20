@@ -408,7 +408,7 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         the_slice = [None] * len(target_shape)
         the_slice[dim_location] = slice(None, None, None)
 
-        return np.asarray(data)[the_slice]
+        return np.asarray(data)[tuple(the_slice)]
 
     raw_coords = {
         "phi": arr.coords["phi"].values - arr.S.phi_offset,

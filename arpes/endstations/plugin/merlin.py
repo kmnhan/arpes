@@ -120,13 +120,12 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 
                 with open(motors_path, "r") as f:
                     lines = f.readlines()
-
-                axis_names = lines[0].strip().split("\t")
-                axis_names = [self.RENAME_KEYS.get(n, n) for n in axis_names]
+                
+                axis_names = [self.RENAME_KEYS.get(n, n) for n in lines[0].strip().split("\t")]
                 values = [l.strip().split("\t") for l in lines[1 : len(frames) + 1]]
                 
                 for v, f in zip(values, frames):
-                    for i, axis_name in enumerate(axis_names):
+                    for i, axis_name in reversed(tuple(enumerate(axis_names))):
                         f.coords[axis_name] = float(v[i])
 
                 frames.sort(key=lambda x: x.coords[axis_name])
@@ -248,10 +247,10 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
 
             if "undulator_polarization" in l.attrs:
                 phase_angle_lookup = {
-                    -1: (0, -np.pi / 4), # RC
-                    0: (0, 0), # LH
-                    1: (0, np.pi / 4), # LC
-                    2: (np.pi / 2, 0), # LV
+                    -1: (0.0, -np.pi / 4), # RC
+                    0: (0.0, 0.0), # LH
+                    1: (0.0, np.pi / 4), # LC
+                    2: (np.pi / 2, 0.0), # LV
                 }
                 polarization_theta, polarization_alpha = phase_angle_lookup[
                     int(l.attrs["undulator_polarization"])
@@ -272,10 +271,10 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                     l.attrs[angle_attr] = float(l.attrs[angle_attr]) * np.pi / 180
 
         data.attrs["alpha"] = np.pi / 2
-        data.attrs["psi"] = 0
+        data.attrs["psi"] = 0.0
         for s in data.S.spectra:
             s.attrs["alpha"] = np.pi / 2
-            s.attrs["psi"] = 0
+            s.attrs["psi"] = 0.0
 
         # TODO Conrad think more about why sometimes individual attrs don't make it onto
         # .spectrum.attrs, for now just paste them over
