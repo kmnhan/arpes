@@ -4,8 +4,8 @@ from lmfit.models import update_param_vals
 from scipy import stats
 import numpy as np
 import lmfit as lf
-from scipy.ndimage import gaussian_filter
-
+from scipy.ndimage import gaussian_filter, gaussian_filter1d
+from arpes.constants import K_BOLTZMANN_EV_KELVIN
 from .x_model_mixin import XModelMixin
 from .functional_forms import (
     fermi_dirac,
@@ -18,9 +18,11 @@ from .functional_forms import (
     g,
     twolorentzian,
 )
+import numba
 
 __all__ = [
     "AffineBroadenedFD",
+    "ExtendedAffineBroadenedFD",
     "FermiLorentzianModel",
     "FermiDiracModel",
     "GStepBModel",
@@ -39,7 +41,13 @@ class AffineBroadenedFD(XModelMixin):
 
     @staticmethod
     def affine_broadened_fd(
-        x, fd_center=0, fd_width=0.003, conv_width=0.02, const_bkg=1, lin_bkg=0, offset=0
+        x,
+        fd_center=0,
+        fd_width=0.003,
+        conv_width=0.02,
+        const_bkg=1,
+        lin_bkg=0,
+        offset=0,
     ):
         """Fermi function convoled with a Gaussian together with affine background.
 
@@ -56,13 +64,19 @@ class AffineBroadenedFD(XModelMixin):
         x_scaling = x[1] - x[0]
         fermi = 1 / (np.exp(dx / fd_width) + 1)
         return (
-            gaussian_filter((const_bkg + lin_bkg * dx) * fermi, sigma=conv_width / x_scaling)
+            gaussian_filter(
+                (const_bkg + lin_bkg * dx) * fermi, sigma=conv_width / x_scaling
+            )
             + offset
         )
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.affine_broadened_fd, **kwargs)
 
         self.set_param_hint("offset", min=0.0)
@@ -91,6 +105,130 @@ class AffineBroadenedFD(XModelMixin):
     guess.__doc__ = lf.models.COMMON_GUESS_DOC
 
 
+@numba.njit("f8[:,:](f8[:], i8)")
+def _coeff_mat(x, deg):
+    mat_ = np.zeros(shape=(x.shape[0], deg + 1), dtype=np.float64)
+    const = np.ones_like(x)
+    mat_[:, 0] = const
+    mat_[:, 1] = x
+    if deg > 1:
+        for n in range(2, deg + 1):
+            mat_[:, n] = x**n
+    return mat_
+
+
+@numba.njit("f8[:](f8[:,:], f8[:])")
+def _fit_x(a, b):
+    # linalg solves ax = b
+    det_ = np.linalg.lstsq(a, b)[0]
+    return det_
+
+
+@numba.njit("f8[:](f8[:], f8[:], i8)")
+def fit_poly_jit(x, y, deg):
+    a = _coeff_mat(x, deg)
+    p = _fit_x(a, y)
+    # Reverse order so p[0] is coefficient of highest order
+    return p
+
+
+# adapted and improved from KWAN Igor procedures
+@numba.njit
+def AffBroadFD_F_G(x, center, temp, resolution, back0, back1, dos0, dos1):
+    delta_x = x[1] - x[0]
+    n_pad = int(resolution * 5.0 / delta_x)  # padding
+    x_pad = n_pad * delta_x
+
+    sigma = resolution / np.sqrt(8 * np.log(2))  # resolution given in FWHM
+    x = np.linspace(x[0] - x_pad, x[-1] + x_pad, int(2 * n_pad + len(x)))
+
+    affine_fd = (back0 + back1 * x) + (dos0 - back0 + (dos1-back1) * x) / (
+        1 + np.exp((x - center) / temp / 8.617333262145177e-5)
+    )
+    g_x = np.linspace(-x_pad, x_pad, 2 * n_pad + 1)
+    # gauss = np.exp(-(g_x**2) / (2 * sigma**2)) / np.sqrt(2 * np.pi * sigma**2)
+    gauss = delta_x * np.exp(-(g_x**2) / (2 * sigma**2)) / np.sqrt(2 * np.pi * sigma**2)
+
+    return affine_fd, gauss
+
+
+class ExtendedAffineBroadenedFD(XModelMixin):
+    """A model for fitting an affine density of states with resolution broadened Fermi-Dirac occupation."""
+
+    @staticmethod
+    def LinearBroadFermiDirac(
+        x,
+        center=0,
+        temp=30,
+        resolution=0.02,
+        back0=1,
+        back1=0,
+        dos0=1,
+        dos1=0,
+    ):
+        return np.convolve(
+            *AffBroadFD_F_G(
+                np.asarray(x, dtype=np.float64),
+                center,
+                temp,
+                resolution,
+                back0,
+                back1,
+                dos0,
+                dos1,
+            ),
+            mode="valid",
+        )
+
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
+        """Defer to lmfit for initialization."""
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
+        super().__init__(self.LinearBroadFermiDirac, **kwargs)
+        self.set_param_hint("temp", min=0.0)
+        self.set_param_hint("resolution", min=0.0)
+
+    def guess(self, data, x, **kwargs):
+        """Make some heuristic guesses.
+
+        We use the mean value to estimate the background parameters and physically
+        reasonable ones to initialize the edge.
+        """
+        pars = self.make_params()
+        
+        
+        len_fit = max(round(len(x) * 0.05), 10)
+        # len_fit = 10
+
+        dos0, dos1 = fit_poly_jit(
+            np.asarray(x[:len_fit], dtype=np.float64),
+            np.asarray(data[:len_fit], dtype=np.float64),
+            deg=1,
+        )
+        back0, back1 = fit_poly_jit(
+            np.asarray(x[-len_fit:], dtype=np.float64),
+            np.asarray(data[-len_fit:], dtype=np.float64),
+            deg=1,
+        )
+        efermi = x[np.argmin(np.gradient(gaussian_filter1d(data, 0.2 * len(x))))]
+
+        pars[f"{self.prefix}center"].set(value=efermi)
+        pars[f"{self.prefix}back0"].set(value=back0)
+        pars[f"{self.prefix}back1"].set(value=back1)
+        pars[f"{self.prefix}dos0"].set(value=dos0)
+        pars[f"{self.prefix}dos1"].set(value=dos1)
+        pars[f"{self.prefix}temp"].set(30)
+        pars[f"{self.prefix}resolution"].set(0.02)
+
+        return update_param_vals(pars, self.prefix, **kwargs)
+
+    __init__.doc = lf.models.COMMON_INIT_DOC
+    guess.__doc__ = lf.models.COMMON_GUESS_DOC
+
+
 class FermiLorentzianModel(XModelMixin):
     """A Lorentzian multiplied by a gstepb background."""
 
@@ -103,9 +241,13 @@ class FermiLorentzianModel(XModelMixin):
             x, gamma, lorcenter, 1
         )
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.gstepb_mult_lorentzian, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -134,9 +276,13 @@ class FermiLorentzianModel(XModelMixin):
 class FermiDiracModel(XModelMixin):
     """A model for the Fermi Dirac function."""
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="drop", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="drop", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(fermi_dirac, **kwargs)
 
         self.set_param_hint("width", min=0)
@@ -158,9 +304,13 @@ class FermiDiracModel(XModelMixin):
 class GStepBModel(XModelMixin):
     """A model for fitting Fermi functions with a linear background."""
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(gstepb, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -171,8 +321,10 @@ class GStepBModel(XModelMixin):
     def guess(self, data, x=None, **kwargs):
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
+        
+        efermi = x[np.argmin(np.gradient(gaussian_filter1d(data, 0.1 * len(x))))]
 
-        pars["%scenter" % self.prefix].set(value=0)
+        pars["%scenter" % self.prefix].set(value=efermi)
         pars["%slin_bkg" % self.prefix].set(value=0)
         pars["%sconst_bkg" % self.prefix].set(value=data.min())
         pars["%swidth" % self.prefix].set(0.02)  # TODO we can do better than this
@@ -195,7 +347,9 @@ class TwoBandEdgeBModel(XModelMixin):
         """Some missing model referenced in old Igor code retained for visibility here."""
         raise NotImplementedError
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
         kwargs.update(
             {
@@ -243,7 +397,9 @@ class TwoBandEdgeBModel(XModelMixin):
 class BandEdgeBModel(XModelMixin):
     """A model for fitting a Lorentzian and background multiplied into the fermi dirac distribution."""
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
         kwargs.update(
             {
@@ -302,12 +458,16 @@ class BandEdgeBGModel(XModelMixin):
     ):
         """A model for fitting a Lorentzian and background multiplied into the fermi dirac distribution."""
         return np.convolve(
-            band_edge_bkg(x, 0, width, amplitude, gamma, lor_center, offset, lin_bkg, const_bkg),
+            band_edge_bkg(
+                x, 0, width, amplitude, gamma, lor_center, offset, lin_bkg, const_bkg
+            ),
             g(np.linspace(-6, 6, 800), 0, 0.01),
             mode="same",
         )
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
         kwargs.update(
             {
@@ -354,7 +514,9 @@ class FermiDiracAffGaussModel(XModelMixin):
     """Fermi Dirac function with an affine background multiplied, then all convolved with a Gaussian."""
 
     @staticmethod
-    def fermi_dirac_bkg_gauss(x, center=0, width=0.05, lin_bkg=0, const_bkg=0, scale=1, sigma=0.01):
+    def fermi_dirac_bkg_gauss(
+        x, center=0, width=0.05, lin_bkg=0, const_bkg=0, scale=1, sigma=0.01
+    ):
         """Fermi Dirac function with an affine background multiplied, then all convolved with a Gaussian."""
         return np.convolve(
             fermi_dirac_affine(x, center, width, lin_bkg, const_bkg, scale),
@@ -362,9 +524,13 @@ class FermiDiracAffGaussModel(XModelMixin):
             mode="same",
         )
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="drop", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="drop", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.fermi_dirac_bkg_gauss, **kwargs)
 
         # self.set_param_hint('width', min=0)
@@ -410,11 +576,17 @@ class GStepBStdevModel(XModelMixin):
             const_bkg: constant background
         """
         dx = x - center
-        return const_bkg + lin_bkg * np.min(dx, 0) + gstep_stdev(x, center, sigma, erf_amp)
+        return (
+            const_bkg + lin_bkg * np.min(dx, 0) + gstep_stdev(x, center, sigma, erf_amp)
+        )
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.gstepb_stdev, **kwargs)
 
         self.set_param_hint("erf_amp", min=0.0)
@@ -446,9 +618,13 @@ class GStepBStandardModel(XModelMixin):
         """Specializes paramters in gstepb."""
         return gstepb(x, center, width=sigma, erf_amp=amplitude, **kwargs)
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.gstepb_standard, **kwargs)
 
         self.set_param_hint("amplitude", min=0.0)
@@ -490,13 +666,19 @@ class TwoLorEdgeModel(XModelMixin):
         erf_amp,
     ):
         """Two Lorentzians, an affine background, and a gstepb edge."""
-        TL = twolorentzian(x, gamma, t_gamma, center, t_center, amp, t_amp, lin_bkg, const_bkg)
+        TL = twolorentzian(
+            x, gamma, t_gamma, center, t_center, amp, t_amp, lin_bkg, const_bkg
+        )
         GS = gstep(x, g_center, sigma, erf_amp)
         return TL * GS
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.twolorentzian_gstep, **kwargs)
 
         self.set_param_hint("amp", min=0.0)
