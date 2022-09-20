@@ -908,7 +908,7 @@ class ARPESAccessorBase:
         """
         if "inner_potential" in self._obj.attrs:
             return self._obj.attrs["inner_potential"]
-
+        raise Warning("No inner potential in metadata, assuming 10eV")
         return 10
 
     def find_spectrum_energy_edges(self, indices=False):
@@ -1800,8 +1800,21 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
             from erlab.plotting import plot_array
             return plot_array(self._obj, *args, **kwargs)
         else:
+            kwargs.setdefault("rad2deg", False)
+            rad2deg = kwargs.pop("rad2deg")
+            if rad2deg is not False:
+                if np.iterable(rad2deg):
+                    conv_dims = rad2deg
+                else:
+                    conv_dims = [
+                        d
+                        for d in ["phi", "theta", "beta", "alpha", "chi"]
+                        if d in self._obj.dims
+                    ]
+                self._obj.assign_coords({d: np.rad2deg(self._obj[d]) for d in conv_dims}).plot(*args, **kwargs)
             # with plt.rc_context({"text.usetex": False}):
-            self._obj.plot(*args, **kwargs)
+            else:
+                self._obj.plot(*args, **kwargs)
 
     def show(self, *args, **kwargs):
         """Opens the Qt based image tool."""
@@ -2425,7 +2438,7 @@ class GenericAccessorTools:
 
         if shift_coords:
             built_data = built_data.assign_coords(
-                **dict([[shift_axis, data.coords[shift_axis] + mean_shift]])
+                **dict([[shift_axis, data.coords[shift_axis] - mean_shift]])
             )
 
         return built_data
