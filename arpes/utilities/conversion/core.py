@@ -472,7 +472,6 @@ def convert_to_kspace(
         + determine_momentum_axes_from_measurement_axes(old_dims)
         + removed
     )
-
     convert_cls = {
         ("phi",): ConvertKp,
         ("beta", "phi"): ConvertKxKy,
@@ -517,6 +516,7 @@ def convert_coordinates(
     trace: Callable = None,
 ):
     ordered_source_dimensions = arr.dims
+    
     trace("Instantiating grid interpolator.")
     grid_interpolator = grid_interpolator_from_dataarray(
         arr.transpose(*ordered_source_dimensions),

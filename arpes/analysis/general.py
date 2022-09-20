@@ -119,13 +119,10 @@ def symmetrize_axis(data, axis_name, flip_axes=None, shift_axis=True):
     Returns:
         Data after symmetrization procedure.
     """
-    data = data.copy(deep=True)  # slow but make sure we don't bork axis on original
+    # data = data.copy(deep=True)  # slow but make sure we don't bork axis on original
     data = data.assign_coords({axis_name:(data.coords[axis_name].values - data.coords[axis_name].values[0])})
-
-    selector = {}
-    selector[axis_name] = slice(None, None, -1)
-    rev = data.sel(**selector).copy()
-
+    
+    rev = data.sel(**{axis_name:slice(None, None, -1)})
     rev = rev.assign_coords({axis_name:-rev.coords[axis_name].values})
 
     if flip_axes is None:

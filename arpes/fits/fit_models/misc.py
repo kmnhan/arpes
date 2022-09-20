@@ -14,17 +14,22 @@ __all__ = [
     "LogRenormalizationModel",
 ]
 
+
 class QuadraticModel(XModelMixin):
     """A model for fitting a quadratic function."""
 
     @staticmethod
     def quadratic(x, a=1, b=0, c=0):
         """Quadratic polynomial."""
-        return a * x ** 2 + b * x + c
+        return a * x**2 + b * x + c
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Just defer to lmfit for initialization."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.quadratic, **kwargs)
 
     def guess(self, data, x=None, **kwargs):
@@ -42,54 +47,60 @@ class QuadraticModel(XModelMixin):
     __init__.doc = lf.models.COMMON_INIT_DOC
     guess.__doc__ = lf.models.COMMON_GUESS_DOC
 
+
 class PolynomialModel(XModelMixin):
     """A polynomial model with up to 9 Parameters, specified by `degree`."""
-    
+
     MAX_DEGREE = 9
     DEGREE_ERR = f"degree must be an integer equal to or smaller than {MAX_DEGREE}."
 
     valid_forms = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-    
+
     @staticmethod
     def polynomial(x, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0, c8=0, c9=0):
         if isinstance(x, np.ndarray):
             return np.polyval([c9, c8, c7, c6, c5, c4, c3, c2, c1, c0], x)
         else:
-            coeffs = xr.DataArray([c9, c8, c7, c6, c5, c4, c3, c2, c1, c0],
-                                  coords={'degree':np.flip(np.arange(10))})
+            coeffs = xr.DataArray(
+                [c9, c8, c7, c6, c5, c4, c3, c2, c1, c0],
+                coords={"degree": np.flip(np.arange(10))},
+            )
             return xr.polyval(x, coeffs)
-    
-    def __init__(self, degree=9, independent_vars=("x",), prefix="", 
-                 missing="raise", name=None, **kwargs):
-        """Just defer to lmfit for initialization."""
-        kwargs.update({'prefix': prefix, 'missing': missing,
-                       'independent_vars': independent_vars})
-        if 'form' in kwargs:
-            degree = int(kwargs.pop('form'))
+
+    def __init__(
+        self, degree=9, independent_vars=("x",), prefix="", missing="raise", **kwargs
+    ):
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
+        if "form" in kwargs:
+            degree = int(kwargs.pop("form"))
         if not isinstance(degree, int) or degree > self.MAX_DEGREE:
             raise TypeError(self.DEGREE_ERR)
-        
+
         self.poly_degree = degree
-        pnames = [f'c{i}' for i in range(degree + 1)]
-        kwargs['param_names'] = pnames
-        
+        pnames = [f"c{i}" for i in range(degree + 1)]
+        kwargs["param_names"] = pnames
+        kwargs.setdefault("name", f"Poly{self.poly_degree}")
+
         super().__init__(self.polynomial, **kwargs)
-    
+
     def guess(self, data, x=None, **kwargs):
         """Estimate initial model parameter values from data."""
         pars = self.make_params()
         if x is None:
-            pars['c0'].set(value=data.mean())
+            pars["c0"].set(value=data.mean())
             for i in range(1, self.poly_degree + 1):
-                pars[f'{self.prefix}c{i}'].set(value=0.)
+                pars[f"{self.prefix}c{i}"].set(value=0.0)
         else:
             out = np.polyfit(x, data, self.poly_degree)
             for i, coef in enumerate(out[::-1]):
-                pars[f'{self.prefix}c{i}'].set(value=coef)
+                pars[f"{self.prefix}c{i}"].set(value=coef)
         return update_param_vals(pars, self.prefix, **kwargs)
 
     __init__.doc = lf.models.COMMON_INIT_DOC
     guess.__doc__ = lf.models.COMMON_GUESS_DOC
+
 
 class FermiVelocityRenormalizationModel(XModelMixin):
     """A model for Logarithmic Renormalization to Fermi Velocity in Dirac Materials."""
@@ -108,13 +119,17 @@ class FermiVelocityRenormalizationModel(XModelMixin):
         #     y = v0 * (rs/np.pi)*(5/3 + np.log(rs))+(rs/4)*np.log(kc/np.abs(kF))
         fx = v0 * (1 + (alpha / (1 + eps)) * np.log(n0 / np.abs(x)))
         fx2 = v0 * (1 + (alpha / (1 + eps * np.abs(x))) * np.log(n0 / np.abs(x)))
-        fx3 = v0 * (1 + (alpha / (1 + eps * x ** 2)) * np.log(n0 / np.abs(x)))
+        fx3 = v0 * (1 + (alpha / (1 + eps * x**2)) * np.log(n0 / np.abs(x)))
         # return v0 + v0*(alpha/(8*eps))*np.log(n0/x)
         return fx3
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """Sets physically reasonable constraints on parameter values."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.fermi_velocity_renormalization_mfl, **kwargs)
 
         self.set_param_hint("alpha", min=0.0)
@@ -158,9 +173,13 @@ class LogRenormalizationModel(XModelMixin):
         dkD = x - kD
         return -vF * np.abs(dkD) + (alpha / 4) * vF * dk * np.log(np.abs(kC / dkD))
 
-    def __init__(self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs):
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
         """The fine structure constant and velocity must be nonnegative, so we will constrain them here."""
-        kwargs.update({"prefix": prefix, "missing": missing, "independent_vars": independent_vars})
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
         super().__init__(self.log_renormalization, **kwargs)
 
         self.set_param_hint("alpha", min=0.0)
