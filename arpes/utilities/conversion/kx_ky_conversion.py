@@ -300,8 +300,8 @@ class ConvertKxKy(CoordinateConverter):
     @property
     def needs_rotation(self) -> bool:
         """Whether we need to rotate the momentum coordinates when converting to angle."""
-        # force rotation when greater than 0.5 deg
-        return np.abs(self.arr.S.lookup_offset_coord("chi")) > (0.5 * np.pi / 180)
+        # force rotation when greater than 0.1 deg
+        return np.abs(self.arr.S.lookup_offset_coord("chi")) > (0.1 * np.pi / 180)
 
     def rkx_rky(self, kx, ky):
         """Returns the rotated kx and ky values when we are rotating by nonzero chi."""
