@@ -362,6 +362,8 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
 
     all = {k: v for k, v in arr.indexes.items() if k not in skip}
     kept = {k: v for k, v in arr.indexes.items() if k in keep}
+    # all = {k: arr[k] for k in arr.dims if k not in skip}
+    # kept = {k: arr[k] for k in arr.dims if k in keep}
 
     old_dims = list(all.keys())
     old_dims.sort()
@@ -406,12 +408,13 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
 
         # else we are dealing with an actual array
         the_slice = [None] * len(target_shape)
-        the_slice[dim_location] = slice(None, None, None)
+        if dim_location is not None:
+            the_slice[dim_location] = slice(None, None, None)
 
         return np.asarray(data)[tuple(the_slice)]
 
     raw_coords = {
-        "phi": arr.coords["phi"].values - arr.S.phi_offset,
+        "phi": arr.S.lookup_offset_coord("phi"),
         "beta": (0 if arr.coords["beta"] is None else arr.coords["beta"].values)
         - arr.S.beta_offset,
         "theta": (0 if arr.coords["theta"] is None else arr.coords["theta"].values)
