@@ -217,7 +217,9 @@ def calculate_kp_bounds(arr: xr.DataArray):
     phi = arr.coords["phi"].values - arr.S.phi_offset
     psi = float(arr.coords["psi"]) - arr.S.psi_offset
 
-    kinetic_energy = arr.coords["eV"].values.max()
+    #!TODO: for raw data in fixed mode, eV is the kinetic energy.
+    # For the moment, assume dither
+    kinetic_energy = arr.S.hv - arr.S.work_function
     kps = (
         arpes.constants.K_INV_ANGSTROM
         * np.sqrt(kinetic_energy)
@@ -279,7 +281,9 @@ def calculate_kx_ky_bounds(arr: xr.DataArray):
             beta_mid,
         ]
     )
-    kinetic_energy = arr.coords["eV"].values.max()
+    #!TODO: for raw data in fixed mode, eV is the kinetic energy.
+    # For the moment, assume dither
+    kinetic_energy = arr.S.hv - arr.S.work_function
 
     kxs = (
         arpes.constants.K_INV_ANGSTROM
