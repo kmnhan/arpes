@@ -1797,7 +1797,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def plot(self, *args, **kwargs):
 
         if len(self._obj.dims) == 2:
-            from erlab.plotting import plot_array
+            from erlab.plotting.general import plot_array
             return plot_array(self._obj, *args, **kwargs)
         else:
             kwargs.setdefault("rad2deg", False)
@@ -1819,16 +1819,16 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def show(self, *args, **kwargs):
         """Opens the Qt based image tool."""
         # import arpes.plotting.qt_tool
-        from erlab.plotting import itool
+        from erlab.plotting.interactive.imagetool_new import itool_
 
         # arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached,
         # **kwargs)
-        return itool(self._obj, *args, **kwargs)
+        return itool_(self._obj, *args, **kwargs)
 
     def show_d2(self, **kwargs):
         """Opens the Bokeh based second derivative image tool."""
         # from arpes.plotting.all import CurvatureTool
-        from erlab.plotting import noisetool
+        from erlab.plotting.interactive.noisetool import noisetool
 
         # curve_tool = CurvatureTool(**kwargs)
         # return curve_tool.make_tool(self._obj)
