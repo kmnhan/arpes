@@ -26,7 +26,7 @@ DEPENDENCY_GROUPS = {
         "astropy",
         "xarray>=0.16.1",
         "h5py>=3.2.1",
-        "pyqtgraph>=0.12.0,<0.13.0",
+        "pyqtgraph>=0.12.0,<0.14.0",
         "PySide6>=6.2.2,<7.0",
         "netCDF4>=1.5.0,<2.0.0",
         "colorcet",
