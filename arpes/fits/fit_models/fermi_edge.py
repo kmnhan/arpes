@@ -105,7 +105,7 @@ class AffineBroadenedFD(XModelMixin):
     guess.__doc__ = lf.models.COMMON_GUESS_DOC
 
 
-@numba.njit("f8[:,:](f8[:], i8)")
+@numba.njit("f8[:,:](f8[:], i8)", cache=True)
 def _coeff_mat(x, deg):
     mat_ = np.zeros(shape=(x.shape[0], deg + 1), dtype=np.float64)
     const = np.ones_like(x)
@@ -117,14 +117,14 @@ def _coeff_mat(x, deg):
     return mat_
 
 
-@numba.njit("f8[:](f8[:,:], f8[:])")
+@numba.njit("f8[:](f8[:,:], f8[:])", cache=True)
 def _fit_x(a, b):
     # linalg solves ax = b
     det_ = np.linalg.lstsq(a, b)[0]
     return det_
 
 
-@numba.njit("f8[:](f8[:], f8[:], i8)")
+@numba.njit("f8[:](f8[:], f8[:], i8)", cache=True)
 def fit_poly_jit(x, y, deg):
     a = _coeff_mat(x, deg)
     p = _fit_x(a, y)
@@ -133,7 +133,7 @@ def fit_poly_jit(x, y, deg):
 
 
 # adapted and improved from KWAN Igor procedures
-@numba.njit
+@numba.njit(cache=True)
 def AffBroadFD_F_G(x, center, temp, resolution, back0, back1, dos0, dos1):
     delta_x = x[1] - x[0]
     n_pad = int(resolution * 5.0 / delta_x)  # padding
@@ -142,12 +142,16 @@ def AffBroadFD_F_G(x, center, temp, resolution, back0, back1, dos0, dos1):
     sigma = resolution / np.sqrt(8 * np.log(2))  # resolution given in FWHM
     x = np.linspace(x[0] - x_pad, x[-1] + x_pad, int(2 * n_pad + len(x)))
 
-    affine_fd = (back0 + back1 * x) + (dos0 - back0 + (dos1-back1) * x) / (
+    affine_fd = (back0 + back1 * x) + (dos0 - back0 + (dos1 - back1) * x) / (
         1 + np.exp((x - center) / temp / 8.617333262145177e-5)
     )
     g_x = np.linspace(-x_pad, x_pad, 2 * n_pad + 1)
     # gauss = np.exp(-(g_x**2) / (2 * sigma**2)) / np.sqrt(2 * np.pi * sigma**2)
-    gauss = delta_x * np.exp(-(g_x**2) / (2 * sigma**2)) / np.sqrt(2 * np.pi * sigma**2)
+    gauss = (
+        delta_x
+        * np.exp(-(g_x**2) / (2 * sigma**2))
+        / np.sqrt(2 * np.pi * sigma**2)
+    )
 
     return affine_fd, gauss
 
@@ -198,8 +202,7 @@ class ExtendedAffineBroadenedFD(XModelMixin):
         reasonable ones to initialize the edge.
         """
         pars = self.make_params()
-        
-        
+
         len_fit = max(round(len(x) * 0.05), 10)
         # len_fit = 10
 
@@ -321,7 +324,7 @@ class GStepBModel(XModelMixin):
     def guess(self, data, x=None, **kwargs):
         """Placeholder for making better heuristic guesses here."""
         pars = self.make_params()
-        
+
         efermi = x[np.argmin(np.gradient(gaussian_filter1d(data, 0.1 * len(x))))]
 
         pars["%scenter" % self.prefix].set(value=efermi)
