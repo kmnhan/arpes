@@ -46,12 +46,12 @@ FIGURE_PATH = None
 DATASET_PATH = None
 
 
-def warn(msg: str):
+def warn(msg: str, **kwargs):
     """Conditionally render a warning using `warnings.warn`."""
     if DOCS_BUILD:
         return
 
-    warnings.warn(msg)
+    warnings.warn(msg, **kwargs)
 
 
 def update_configuration(user_path: Optional[str] = None) -> None:
