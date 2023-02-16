@@ -1,5 +1,6 @@
 """Common implementations of peaks, backgrounds for other models."""
 import numpy as np
+import numba
 from scipy.special import erfc  # pylint: disable=no-name-in-module
 
 __all__ = [
@@ -41,12 +42,12 @@ def g(x, mu=0, sigma=0.1):
     """TODO, unify this with the standard Gaussian definition because it's gross."""
     return (1 / np.sqrt(2 * np.pi * sigma ** 2)) * np.exp(-(1 / 2) * ((x - mu) / sigma) ** 2)
 
-
+@numba.njit(cache=True)
 def lorentzian(x, gamma, center, amplitude):
     """A straightforward Lorentzian."""
     return amplitude * (1 / (2 * np.pi)) * gamma / ((x - center) ** 2 + (0.5 * gamma) ** 2)
 
-
+@numba.njit(cache=True)
 def fermi_dirac(x, center=0, width=0.05, scale=1):
     """Fermi edge, with somewhat arbitrary normalization."""
     return scale / (np.exp((x - center) / width) + 1)
@@ -97,7 +98,7 @@ def band_edge_bkg(
         x, center, width
     ) + offset
 
-
+@numba.njit(cache=True)
 def fermi_dirac_affine(x, center=0, width=0.05, lin_bkg=0, const_bkg=0, scale=1):
     """Fermi step edge with a linear background above the Fermi level."""
     # Fermi edge with an affine background multiplied in
