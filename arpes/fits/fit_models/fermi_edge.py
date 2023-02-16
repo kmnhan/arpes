@@ -23,6 +23,7 @@ import numba
 __all__ = [
     "AffineBroadenedFD",
     "ExtendedAffineBroadenedFD",
+    "Lor2AffEDC",
     "FermiLorentzianModel",
     "FermiDiracModel",
     "GStepBModel",
@@ -223,6 +224,139 @@ class ExtendedAffineBroadenedFD(XModelMixin):
         pars[f"{self.prefix}back1"].set(value=back1)
         pars[f"{self.prefix}dos0"].set(value=dos0)
         pars[f"{self.prefix}dos1"].set(value=dos1)
+        pars[f"{self.prefix}temp"].set(30)
+        pars[f"{self.prefix}resolution"].set(0.02)
+
+        return update_param_vals(pars, self.prefix, **kwargs)
+
+    __init__.doc = lf.models.COMMON_INIT_DOC
+    guess.__doc__ = lf.models.COMMON_GUESS_DOC
+
+
+@numba.njit(cache=True)
+def EDCFunc_Lor2_Aff_FD(
+    x,
+    center,
+    temp,
+    resolution,
+    scale,
+    lin_bkg,
+    const_bkg,
+    p1_gamma,
+    p1_center,
+    p1_amplitude,
+    p2_gamma,
+    p2_center,
+    p2_amplitude,
+):
+    delta_x = x[1] - x[0]
+    n_pad = int(resolution * 5.0 / delta_x)  # padding
+    x_pad = n_pad * delta_x
+
+    sigma = resolution / np.sqrt(8 * np.log(2))  # resolution given in FWHM
+    x = np.linspace(x[0] - x_pad, x[-1] + x_pad, int(2 * n_pad + len(x)))
+    lor1 = lorentzian(x, p1_gamma, p1_center, p1_amplitude)
+    lor2 = lorentzian(x, p2_gamma, p2_center, p2_amplitude)
+
+    fd_func = 1 / (1 + np.exp((x - center) / temp / 8.617333262145177e-5))
+    res = (lor1 + lor2 + lin_bkg * x + scale) * fd_func + const_bkg
+
+    g_x = np.linspace(-x_pad, x_pad, 2 * n_pad + 1)
+    gauss = (
+        delta_x
+        * np.exp(-(g_x**2) / (2 * sigma**2))
+        / np.sqrt(2 * np.pi * sigma**2)
+    )
+
+    return res, gauss
+
+
+class Lor2AffEDC(XModelMixin):
+    """A model for fitting an affine density of states with resolution broadened Fermi-Dirac occupation."""
+
+    @staticmethod
+    def Lorentz2PeakEDC(
+        x,
+        center=0,
+        temp=30,
+        resolution=0.02,
+        scale=1,
+        lin_bkg=0,
+        const_bkg=0,
+        p1_gamma=1,
+        p1_center=0,
+        p1_amplitude=1,
+        p2_gamma=1,
+        p2_center=0,
+        p2_amplitude=1,
+    ):
+        return np.convolve(
+            *EDCFunc_Lor2_Aff_FD(
+                np.asarray(x, dtype=np.float64),
+                center,
+                temp,
+                resolution,
+                scale,
+                lin_bkg,
+                const_bkg,
+                p1_gamma,
+                p1_center,
+                p1_amplitude,
+                p2_gamma,
+                p2_center,
+                p2_amplitude,
+            ),
+            mode="valid",
+        )
+
+    def __init__(
+        self, independent_vars=("x",), prefix="", missing="raise", name=None, **kwargs
+    ):
+        """Defer to lmfit for initialization."""
+        kwargs.update(
+            {"prefix": prefix, "missing": missing, "independent_vars": independent_vars}
+        )
+        super().__init__(self.Lorentz2PeakEDC, **kwargs)
+        self.set_param_hint("temp", min=0.0)
+        self.set_param_hint("resolution", min=0.0)
+
+    def guess(self, data, x, **kwargs):
+        """Make some heuristic guesses.
+
+        We use the mean value to estimate the background parameters and physically
+        reasonable ones to initialize the edge.
+        """
+        pars = self.make_params()
+
+        len_fit = max(round(len(x) * 0.05), 10)
+        # len_fit = 10
+
+        # dos0, dos1 = fit_poly_jit(
+        #     np.asarray(x[:len_fit], dtype=np.float64),
+        #     np.asarray(data[:len_fit], dtype=np.float64),
+        #     deg=1,
+        # )
+        # back0, back1 = fit_poly_jit(
+        #     np.asarray(x[-len_fit:], dtype=np.float64),
+        #     np.asarray(data[-len_fit:], dtype=np.float64),
+        #     deg=1,
+        # )
+        # efermi = x[np.argmin(np.gradient(gaussian_filter1d(data, 0.2 * len(x))))]
+
+        pars[f"{self.prefix}center"].set(value=0)
+        pars[f"{self.prefix}scale"].set(value=1)
+        pars[f"{self.prefix}lin_bkg"].set(value=0)
+        pars[f"{self.prefix}const_bkg"].set(value=0)
+        pars[f"{self.prefix}p1_gamma"].set(value=1)
+        pars[f"{self.prefix}p1_center"].set(value=0)
+        pars[f"{self.prefix}p1_amplitude"].set(value=1)
+        pars[f"{self.prefix}p2_gamma"].set(value=1)
+        pars[f"{self.prefix}p2_center"].set(value=0)
+        pars[f"{self.prefix}p2_amplitude"].set(value=1)
+        # pars[f"{self.prefix}back0"].set(value=back0)
+        # pars[f"{self.prefix}back1"].set(value=back1)
+        # pars[f"{self.prefix}dos0"].set(value=dos0)
+        # pars[f"{self.prefix}dos1"].set(value=dos1)
         pars[f"{self.prefix}temp"].set(30)
         pars[f"{self.prefix}resolution"].set(0.02)
 
