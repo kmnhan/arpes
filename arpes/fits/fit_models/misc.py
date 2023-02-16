@@ -49,21 +49,21 @@ class QuadraticModel(XModelMixin):
 
 
 class PolynomialModel(XModelMixin):
-    """A polynomial model with up to 9 Parameters, specified by `degree`."""
+    """A polynomial model with up to 12 Parameters, specified by `degree`."""
 
-    MAX_DEGREE = 9
+    MAX_DEGREE = 12
     DEGREE_ERR = f"degree must be an integer equal to or smaller than {MAX_DEGREE}."
 
-    valid_forms = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+    valid_forms = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 
     @staticmethod
-    def polynomial(x, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0, c8=0, c9=0):
+    def polynomial(x, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0, c8=0, c9=0, c10=0, c11=0, c12=0):
         if isinstance(x, np.ndarray):
-            return np.polyval([c9, c8, c7, c6, c5, c4, c3, c2, c1, c0], x)
+            return np.polyval([c12, c11, c10, c9, c8, c7, c6, c5, c4, c3, c2, c1, c0], x)
         else:
             coeffs = xr.DataArray(
-                [c9, c8, c7, c6, c5, c4, c3, c2, c1, c0],
-                coords={"degree": np.flip(np.arange(10))},
+                [c12, c11, c10, c9, c8, c7, c6, c5, c4, c3, c2, c1, c0],
+                coords={"degree": np.flip(np.arange(13))},
             )
             return xr.polyval(x, coeffs)
 
