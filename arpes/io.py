@@ -217,7 +217,8 @@ def load_pickle(name: str) -> Any:
 
 def save_pickle(data: Any, name: str):
     """Saves a workspace local pickle. Inverse to `load_pickle`."""
-    pickle.dump(data, open(file_for_pickle(name), "wb"))
+    with open(file_for_pickle(name), "wb") as file:
+        pickle.dump(data, file)
 
 
 def easy_pickle(data_or_str: Any, name=None) -> Any:
