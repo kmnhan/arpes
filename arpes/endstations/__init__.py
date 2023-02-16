@@ -158,8 +158,12 @@ class EndstationBase:
         workspace = arpes.config.CONFIG["WORKSPACE"]
         if data_dir is None:
             data_dir = "data"
-        workspace_path = os.path.join(workspace["path"],data_dir)
-        workspace = workspace["name"]
+        try:
+            workspace_path = os.path.join(workspace["path"],data_dir)
+            workspace = workspace["name"]
+        except KeyError:
+            workspace_path = os.path.join(str(os.getcwd()), data_dir)
+            workspace = "default"
 
         base_dir = workspace_path or os.path.join(arpes.config.DATA_PATH, workspace)
         dir_options = [os.path.join(base_dir, option) for option in cls._SEARCH_DIRECTORIES]
