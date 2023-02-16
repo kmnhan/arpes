@@ -28,7 +28,7 @@ from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 from joblib import Parallel, delayed
 from packaging import version
-from tqdm import tqdm, tqdm_notebook
+import tqdm
 
 from . import mp_fits
 
@@ -37,7 +37,9 @@ __all__ = ("broadcast_model", "result_to_hints")
 
 TypeIterable = Union[List[type], Tuple[type]]
 
-XARRAY_REQUIRES_VALUES_WRAPPING = version.parse(xr.__version__) > version.parse("0.10.0")
+XARRAY_REQUIRES_VALUES_WRAPPING = version.parse(xr.__version__) > version.parse(
+    "0.10.0"
+)
 
 
 def wrap_for_xarray_values_unpacking(item):
@@ -48,7 +50,9 @@ def wrap_for_xarray_values_unpacking(item):
     return item
 
 
-def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> Dict[str, Dict[str, Any]]:
+def result_to_hints(
+    m: lmfit.model.ModelResult, defaults=None
+) -> Dict[str, Dict[str, Any]]:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -106,6 +110,7 @@ def parse_model(model):
 
     return [read_token(token) for token in model.split()]
 
+
 def is_notebook():
     # http://stackoverflow.com/questions/34091701/determine-if-were-in-an-ipython-notebook-session
     if "IPython" not in sys.modules:  # IPython hasn't been imported
@@ -115,21 +120,26 @@ def is_notebook():
     # check for `kernel` attribute on the IPython instance
     return getattr(get_ipython(), "kernel", None) is not None
 
+
 @contextlib.contextmanager
 def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
     """Context manager to patch joblib to report into tqdm progress bar given as
     argument"""
-    
+
     if file is None:
         file = sys.stdout
-    
+
     if notebook is None:
         notebook = is_notebook()
-        
+
     if notebook:
-        tqdm_object = tqdm_notebook(iterable=None, dynamic_ncols=dynamic_ncols, file=file)
+        tqdm_object = tqdm.notebook.tqdm(
+            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
+        )
     else:
-        tqdm_object = tqdm(iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs)
+        tqdm_object = tqdm.tqdm(
+            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
+        )
 
     def tqdm_print_progress(self):
         if self.n_completed_tasks > tqdm_object.n:
@@ -144,6 +154,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
     finally:
         joblib.parallel.Parallel.print_progress = original_print_progress
         tqdm_object.close()
+
 
 @update_provenance("Broadcast a curve fit along several dimensions")
 @traceable
@@ -160,7 +171,7 @@ def broadcast_model(
     parallelize=None,
     trace: Callable = None,
     parallel_kw=dict(),
-    **kwargs
+    **kwargs,
 ):
     """Perform a fit across a number of dimensions.
 
@@ -216,10 +227,6 @@ def broadcast_model(
     trace("Parsing model")
     model = parse_model(model_cls)
 
-    wrap_progress = lambda x, *_, **__: x
-    if progress:
-        wrap_progress = tqdm_notebook
-
     serialize = parallelize
     fitter = mp_fits.MPWorker(
         data=data,
@@ -247,13 +254,21 @@ def broadcast_model(
         parallel_kw.setdefault("n_jobs", -1)
         parallel_kw.setdefault("max_nbytes", None)
         if progress:
-            with joblib_progress(desc="Performing fits", total=n_fits) as _:
-                exe_results = Parallel(**parallel_kw)(delayed(fitter)(c) for c in template.G.iter_coords())
+            with joblib_progress(desc="Fitting", total=n_fits) as _:
+                exe_results = Parallel(**parallel_kw)(
+                    delayed(fitter)(c) for c in template.G.iter_coords()
+                )
         else:
-            exe_results = Parallel(**parallel_kw)(delayed(fitter)(c) for c in template.G.iter_coords())
+            exe_results = Parallel(**parallel_kw)(
+                delayed(fitter)(c) for c in template.G.iter_coords()
+            )
     else:
         trace(f"Running fits (nfits={n_fits}) serially")
         exe_results = []
+        wrap_progress = lambda x, *_, **__: x
+        if progress:
+            wrap_progress = tqdm.tqdm
+
         for _, cut_coords in wrap_progress(
             template.G.enumerate_iter_coords(), desc="Fitting", total=n_fits
         ):
