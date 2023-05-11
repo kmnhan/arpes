@@ -59,6 +59,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
         "sample": "sample_name",
         "mesh_current": "photon_flux",
         "ring_energy": "beam_energy",
+        "EPU POL": "undulator_polarization",
         "epu_pol": "undulator_polarization",
         "epu_gap": "undulator_gap",
         "epu_z": "undulator_z",
@@ -133,7 +134,7 @@ class BL403ARPESEndstation(SynchrotronEndstation, HemisphericalEndstation, SESEn
                 for frame in frames:
                     # promote x, y, z, and mesh curr. to coords so they get concatted
                     for l in [frame] + frame.S.spectra:
-                        for c in ["x", "y", "z", "photon_flux"]:
+                        for c in ["x", "y", "z", "photon_flux","undulator_polarization"]:
                             if c not in l.coords:
                                 l.coords[c] = l.attrs[c]
 
