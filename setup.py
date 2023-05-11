@@ -39,7 +39,7 @@ DEPENDENCY_GROUPS = {
         # plotting
         "matplotlib>=3.0.3",
         "bokeh>=2.0.0,<3.0.0",
-        "ipywidgets>=7.0.1,<8.0.0",
+        "ipywidgets>=7.0.1",
         # Misc deps
         "packaging",
         "colorama",
