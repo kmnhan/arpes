@@ -50,7 +50,7 @@ class XModelMixin(lf.Model):
         prefix_params=True,
         transpose=False,
         **kwargs
-    ):
+    ) -> lf.model.ModelResult:
         """Performs a fit on xarray data after guessing parameters.
 
         Params allows you to pass in hints as to what the values and bounds on parameters
