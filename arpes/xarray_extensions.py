@@ -844,6 +844,20 @@ class ARPESAccessorBase:
             c: self.lookup_offset(c) for c in self._obj.coords if f"{c}_offset" in self._obj.attrs
         }
 
+    @property
+    def polar_angle(self):
+        if self.is_slit_vertical:
+            return self.lookup_offset_coord("theta") + self.lookup_offset_coord("psi")
+        else:
+            return self.lookup_offset_coord("beta") + self.lookup_offset_coord("psi")
+
+    @property
+    def parallel_angle(self):
+        if self.is_slit_vertical:
+            return self.lookup_offset_coord("beta")
+        else:
+            return self.lookup_offset_coord("theta")
+    
     def lookup_offset_coord(self, name):
         return self.lookup_coord(name) - self.lookup_offset(name)
 
@@ -1232,7 +1246,7 @@ class ARPESAccessorBase:
             if slice_widths[k] == 0:
                 selection[k] = v
             else:
-                slices[k] = slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
+                slices[k] = slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2 + np.finfo(float).eps)
         # slices = {
         #     k: slice(v - slice_widths[k] / 2, v + slice_widths[k] / 2)
         #     for k, v in slice_kwargs.items()
@@ -1802,6 +1816,7 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
         else:
             kwargs.setdefault("rad2deg", False)
             rad2deg = kwargs.pop("rad2deg")
+            # kwargs.setdefault("add_title", False)
             if rad2deg is not False:
                 if np.iterable(rad2deg):
                     conv_dims = rad2deg
@@ -1819,16 +1834,16 @@ class ARPESDataArrayAccessor(ARPESAccessorBase):
     def show(self, *args, **kwargs):
         """Opens the Qt based image tool."""
         # import arpes.plotting.qt_tool
-        from erlab.plotting.interactive.imagetool_new import itool_
+        from erlab.interactive.imagetool import itool
 
         # arpes.plotting.qt_tool.qt_tool(self._obj, detached=detached,
         # **kwargs)
-        return itool_(self._obj, *args, **kwargs)
+        return itool(self._obj, *args, **kwargs)
 
     def show_d2(self, **kwargs):
         """Opens the Bokeh based second derivative image tool."""
         # from arpes.plotting.all import CurvatureTool
-        from erlab.plotting.interactive.noisetool import noisetool
+        from erlab.interactive.noisetool import noisetool
 
         # curve_tool = CurvatureTool(**kwargs)
         # return curve_tool.make_tool(self._obj)
