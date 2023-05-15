@@ -87,7 +87,7 @@ def reduce_model_with_operators(model):
         return left / right
 
 
-def compile_model(model, params=None, prefixes=None):
+def compile_model(model, params=None, model_params=None, prefixes=None):
     """Generates an lmfit model instance from specification.
 
     Takes a model sequence, i.e. a Model class, a list of such classes, or a list
@@ -95,6 +95,8 @@ def compile_model(model, params=None, prefixes=None):
     """
     if params is None:
         params = {}
+    if model_params is None:
+        model_params = {}
 
     prefix_compile = "{}"
     if prefixes is None:
@@ -103,7 +105,7 @@ def compile_model(model, params=None, prefixes=None):
 
     try:
         if issubclass(model, lmfit.Model):
-            return model()
+            return model(**model_params)
     except TypeError:
         pass
 

@@ -32,6 +32,7 @@ class MPWorker:
         uncompiled_model: Any,
         prefixes: Optional[List[str]],
         params: Any,
+        model_params: dict | None = None,
         safe: bool = False,
         serialize: bool = False,
         weights: Optional[xr.DataArray] = None,
@@ -43,6 +44,7 @@ class MPWorker:
         self.uncompiled_model = uncompiled_model
         self.prefixes = prefixes
         self.params = params
+        self.model_params = model_params
         self.safe = safe
         self.serialize = serialize
         self.weights = weights
@@ -64,7 +66,10 @@ class MPWorker:
             return self._model
 
         self._model = compile_model(
-            self.uncompiled_model, params=self.params, prefixes=self.prefixes
+            self.uncompiled_model,
+            params=self.params,
+            model_params=self.model_params,
+            prefixes=self.prefixes,
         )
         self._model.make_params()
 
