@@ -123,9 +123,9 @@ class QtInfo:
             arg,
             (int, float),
         ):
-            return self.screen_dpi * arg
+            return round(self.screen_dpi * arg)
 
-        return map(lambda x: x * self.screen_dpi, arg)
+        return map(lambda x: round(x * self.screen_dpi), arg)
 
     def setup_pyqtgraph(self):
         """Does any patching required on PyQtGraph and configures options."""

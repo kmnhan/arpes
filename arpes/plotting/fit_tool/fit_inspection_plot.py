@@ -58,7 +58,7 @@ class FitInspectionPlot(QWidget):
         eval, we cheat by using the original data and the residual to back out
         the fit data.
         """
-        return self.data - self.residual
+        return self.data + self.residual
 
     @property
     def init_eval_model(self) -> np.ndarray:

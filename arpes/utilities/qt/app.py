@@ -3,6 +3,7 @@ from PySide6 import QtWidgets
 import pyqtgraph as pg
 import numpy as np
 import typing
+import sys
 import xarray as xr
 import weakref
 
@@ -208,8 +209,10 @@ class SimpleApp:
         if arpes.config.DOCS_BUILD:
             return
 
-        if app is None:
-            app = QtWidgets.QApplication([])
+        if app is None:            
+            app = QtWidgets.QApplication.instance()
+        if not app:
+            app = QtWidgets.QApplication(sys.argv)
 
         app.owner = self
         # self.app = app
@@ -219,7 +222,7 @@ class SimpleApp:
         qt_info.init_from_app(app)
 
         self._window = self.WINDOW_CLS()
-        self.window.resize(*qt_info.inches_to_px(self.WINDOW_SIZE))
+        self.window.resize(*[round(sz) for sz in qt_info.inches_to_px(self.WINDOW_SIZE)])
         self.window.setWindowTitle(self.TITLE)
 
         self.cw = QtWidgets.QWidget()
