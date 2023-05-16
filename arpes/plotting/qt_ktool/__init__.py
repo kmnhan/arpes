@@ -1,5 +1,5 @@
 """A live momentun conversion tool, useful for finding and setting offsets."""
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 import numpy as np
 
 from arpes.utilities import normalize_to_spectrum, group_by

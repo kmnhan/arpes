@@ -2,7 +2,7 @@
 # pylint: disable=import-error
 
 from arpes.utilities.qt.utils import PlotOrientation
-from PySide6 import QtGui, QtCore, QtWidgets
+from qtpy import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 import numpy as np
 import weakref

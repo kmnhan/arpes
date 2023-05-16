@@ -1,13 +1,13 @@
 """Defines a widget which provides a 1D browsable `lmfit.model.ModelResult`."""
 
-from PySide6 import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 from typing import Optional
 import pyqtgraph as pg
 import xarray as xr
 import numpy as np
 import math
-from PySide6.QtWidgets import QLayout, QGridLayout, QWidget
+from qtpy.QtWidgets import QLayout, QGridLayout, QWidget
 import lmfit
 from weakref import ReferenceType
 
@@ -94,7 +94,7 @@ class FitInspectionPlot(QWidget):
         p4 = self.inner_plot.plot(xr.DataArray(self.init_eval_model, coords, dims))
 
         plot_width = int(math.ceil(qt_info.inches_to_px(0.02)))
-        p1.setPen(pg.mkPen(width=plot_width, color=(0, 0, 0)))
+        p1.setPen(pg.mkPen(width=plot_width, color=(255, 255, 255)))
         p2.setPen(pg.mkPen(width=plot_width, color=(255, 0, 0)))
         p3.setPen(pg.mkPen(width=plot_width, color=(50, 200, 20), style=QtCore.Qt.DotLine))
         p4.setPen(pg.mkPen(width=plot_width, color=(70, 150, 70), style=QtCore.Qt.DotLine))

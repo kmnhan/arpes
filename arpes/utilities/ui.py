@@ -51,7 +51,7 @@ from typing import Dict, List, Optional
 from collections import namedtuple
 
 import functools
-from PySide6.QtWidgets import (
+from qtpy.QtWidgets import (
     QGridLayout,
     QWidget,
     QVBoxLayout,
@@ -62,8 +62,8 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from PySide6 import QtCore, QtGui
-from PySide6.QtCore import Qt
+from qtpy import QtCore, QtGui
+from qtpy.QtCore import Qt
 
 from .widgets import *
 

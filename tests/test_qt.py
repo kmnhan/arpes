@@ -1,4 +1,4 @@
-from PySide6 import QtCore
+from qtpy import QtCore
 from arpes.io import example_data
 
 from pytestqt.qtbot import QtBot

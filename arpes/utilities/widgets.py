@@ -2,7 +2,7 @@
 import os
 from rx.subject import BehaviorSubject, Subject
 
-from PySide6.QtWidgets import (
+from qtpy.QtWidgets import (
     QPushButton,
     QCheckBox,
     QComboBox,

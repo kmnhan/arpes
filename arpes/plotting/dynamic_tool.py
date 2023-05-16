@@ -1,7 +1,7 @@
 """Allows for making any function of a spectrum into a dynamic tool."""
 import inspect
 
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 
 from arpes.utilities import normalize_to_spectrum, group_by
 from arpes.typing import DataType

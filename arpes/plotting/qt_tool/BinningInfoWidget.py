@@ -1,6 +1,6 @@
 """An axis binning control."""
 
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 
 from arpes.utilities.ui import layout
 

@@ -1,5 +1,5 @@
 """Application infrastructure for apps/tools which browse a data volume."""
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 import pyqtgraph as pg
 import numpy as np
 import typing
