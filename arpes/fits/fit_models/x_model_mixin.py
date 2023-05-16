@@ -137,21 +137,22 @@ class XModelMixin(lf.Model):
 
             guessed_params.update(params)
 
-        result = None
-        try:
-            result = super().fit(
-                flat_data, guessed_params, **coord_values, weights=real_weights, **kwargs
-            )
-            result.independent = coord_values
-            result.independent_order = new_dim_order
-        except Exception as e:
-            print(e)
-            if debug:
-                import pdb
+        # result = None
+        # try:
+        result = super().fit(
+            flat_data, guessed_params, **coord_values, weights=real_weights, **kwargs
+        )
+        result.independent = coord_values
+        result.independent_order = new_dim_order
+        return result
+        # except Exception as e:
+        #     print(e)
+        #     if debug:
+        #         import pdb
 
-                pdb.post_mortem(e.__traceback__)
-        finally:
-            return result
+        #         pdb.post_mortem(e.__traceback__)
+        # finally:
+        #     return result
 
     def xguess(self, data, **kwargs):
         """Tries to determine a guess for the parameters."""
