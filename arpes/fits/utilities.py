@@ -200,6 +200,8 @@ def broadcast_model(
         - "data": The original data used for fitting
         - "norm_residual": The residual array normalized by the data, i.e. the fractional error
     """
+    ori_data = data
+
     if params is None:
         params = {}
 
@@ -298,7 +300,7 @@ def broadcast_model(
     return xr.Dataset(
         {
             "results": template,
-            "data": data,
+            "data": ori_data,
             "residual": residual,
             "norm_residual": residual / data,
         },
