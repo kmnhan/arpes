@@ -180,7 +180,7 @@ def unpack_bands_from_fit(band_results: xr.DataArray, weights=None, use_stderr_w
         label = identified_band_results.loc[first_coordinate].values.item()[i]
 
         def dataarray_for_value(param_name, is_value):
-            values = np.ndarray(shape=identified_band_results.values.shape, dtype=np.float)
+            values = np.ndarray(shape=identified_band_results.values.shape, dtype=float)
             it = np.nditer(values, flags=["multi_index"], op_flags=["writeonly"])
             while not it.finished:
                 prefix = identified_band_results.values[it.multi_index][i]
