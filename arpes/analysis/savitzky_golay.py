@@ -234,8 +234,8 @@ def savitzky_golay_array(y, window_size, order, deriv=0, rate=1):
         the smoothed signal (or it's n-th derivative).
     """
     try:
-        window_size = np.abs(np.int(window_size))
-        order = np.abs(np.int(order))
+        window_size = np.abs(int(window_size))
+        order = np.abs(int(order))
     except ValueError:
         raise ValueError("window_size and order have to be of type int")
 

@@ -2749,7 +2749,7 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        return self._obj.G.map(param_getter(param_name), otypes=[np.float])
+        return self._obj.G.map(param_getter(param_name), otypes=[float])
 
     def s(self, param_name: str) -> xr.DataArray:
         """Collects the standard deviation of a parameter from fitting.
@@ -2766,7 +2766,7 @@ class ARPESFitToolsAccessor:
             The output array is infilled with `np.nan` if the fit did not converge/
             the fit result is `None`.
         """
-        return self._obj.G.map(param_stderr_getter(param_name), otypes=[np.float])
+        return self._obj.G.map(param_stderr_getter(param_name), otypes=[float])
 
     @property
     def bands(self) -> Dict[str, MultifitBand]:

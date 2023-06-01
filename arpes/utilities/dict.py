@@ -15,21 +15,16 @@ __all__ = (
 )
 
 
-def _rename_key(d: Union[Dict[str, Any], OrderedDict], k: str, nk: str) -> None:
-    if k in d:
-        d[nk] = d[k]
-        del d[k]
-
-
 def rename_keys(
     d: Union[Dict[str, Any], OrderedDict], keys_dict: Dict[str, str]
 ) -> Union[Dict[str, Any], OrderedDict]:
     """Renames all the keys of `d` according to the remapping in `keys_dict`."""
-    d = d.copy()
-    for k, nk in keys_dict.items():
-        _rename_key(d, k, nk)
-
-    return d
+    if isinstance(d, OrderedDict):
+        return OrderedDict(
+            (keys_dict[k] if k in keys_dict else k, v) for k, v in d.items()
+        )
+    else:
+        return {keys_dict[k] if k in keys_dict else k: v for k, v in d.items()}
 
 
 def clean_keys(d):
