@@ -133,7 +133,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
         notebook = is_notebook()
 
     if notebook:
-        tqdm_object = tqdm.notebook.tqdm(
+        tqdm_object = tqdm.tqdm_notebook(
             iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
         )
     else:
