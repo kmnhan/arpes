@@ -132,7 +132,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
         notebook = is_notebook()
 
     if notebook:
-        tqdm_object = tqdm.notebook.tqdm(
+        tqdm_object = tqdm.tqdm_notebook(
             iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
         )
     else:
@@ -197,6 +197,8 @@ def broadcast_model(
         - "data": The original data used for fitting
         - "norm_residual": The residual array normalized by the data, i.e. the fractional error
     """
+    ori_data = data
+
     if params is None:
         params = {}
 
@@ -270,7 +272,7 @@ def broadcast_model(
     return xr.Dataset(
         {
             "results": template,
-            "data": data,
+            "data": ori_data,
             "residual": residual,
             "norm_residual": residual / data,
         },
