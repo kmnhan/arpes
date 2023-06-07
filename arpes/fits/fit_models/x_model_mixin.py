@@ -39,6 +39,8 @@ class XModelMixin(lf.Model):
 
     n_dims = 1
     dimension_order = None
+    guess_dataarray = False
+    fit_flat = True
 
     def guess_fit(
         self,
@@ -91,7 +93,9 @@ class XModelMixin(lf.Model):
                         return list(intersect)[0]
 
                 # resolve multidimensional parameters
-                if self.dimension_order is None or all(d is None for d in self.dimension_order):
+                if self.dimension_order is None or all(
+                    d is None for d in self.dimension_order
+                ):
                     new_dim_order = data.dims
                 else:
                     new_dim_order = [
@@ -103,7 +107,9 @@ class XModelMixin(lf.Model):
                     warnings.warn("Transposing data for multidimensional fit.")
                     data = data.transpose(*new_dim_order)
 
-                coord_values = {k: v.values for k, v in data.coords.items() if k in new_dim_order}
+                coord_values = {
+                    k: v.values for k, v in data.coords.items() if k in new_dim_order
+                }
                 real_data, flat_data = data.values, data.values.ravel()
 
         real_weights = weights
@@ -123,7 +129,13 @@ class XModelMixin(lf.Model):
             flat_data = real_data
 
         if guess:
-            guessed_params = self.guess(real_data, **coord_values)
+            if self.guess_dataarray and isinstance(data, xr.DataArray):
+                if transpose:
+                    guessed_params = self.guess(data.T, **coord_values)
+                else:
+                    guessed_params = self.guess(data, **coord_values)
+            else:
+                guessed_params = self.guess(real_data, **coord_values)
         else:
             guessed_params = self.make_params()
 
@@ -139,8 +151,17 @@ class XModelMixin(lf.Model):
 
         # result = None
         # try:
+        
+        if not self.fit_flat:
+            for i, k in enumerate(coord_values.keys()):
+                coord_values[k] = coord_values[k][tuple(None if i == j else slice(None) for j in range(self.n_dims))]
+                
+        for k in list(coord_values.keys()):
+            if k in kwargs:
+                coord_values[k] = kwargs.pop(k)
+        
         result = super().fit(
-            flat_data, guessed_params, **coord_values, weights=real_weights, **kwargs
+            flat_data if self.fit_flat else real_data, guessed_params, **coord_values, weights=real_weights, **kwargs
         )
         result.independent = coord_values
         result.independent_order = new_dim_order
@@ -240,4 +261,6 @@ class XConvolutionCompositeModel(lf.CompositeModel, XModelMixin):
 
 def gaussian_convolve(model_instance):
     """Produces a model that consists of convolution with a Gaussian kernel."""
-    return XConvolutionCompositeModel(model_instance, GaussianModel(prefix="conv_"), np.convolve)
+    return XConvolutionCompositeModel(
+        model_instance, GaussianModel(prefix="conv_"), np.convolve
+    )
