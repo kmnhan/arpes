@@ -5,8 +5,6 @@ Uses dill for IPC due to issues with pickling `lmfit` instances.
 import xarray as xr
 from typing import Any, List, Optional
 from .broadcast_common import apply_window, compile_model, unwrap_params
-from dataclasses import dataclass, field
-import dill
 
 __all__ = ["MPWorker"]
 
@@ -34,7 +32,6 @@ class MPWorker:
         params: Any,
         model_params: dict | None = None,
         safe: bool = False,
-        serialize: bool = False,
         weights: Optional[xr.DataArray] = None,
         window: Optional[xr.DataArray] = None,
         # _model: Any = field(init=False),
@@ -46,7 +43,6 @@ class MPWorker:
         self.params = params
         self.model_params = model_params
         self.safe = safe
-        self.serialize = serialize
         self.weights = weights
         self.window = window
         self._model = None
@@ -110,8 +106,5 @@ class MPWorker:
             true_residual = original_cut_data - fit_result.eval(
                 x=original_cut_data.coords[original_cut_data.dims[0]].values
             )
-
-        if self.serialize:
-            fit_result = dill.dumps(fit_result)
 
         return fit_result, true_residual, cut_coords

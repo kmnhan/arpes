@@ -17,17 +17,18 @@ import sys
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import arpes.fits.fit_models
-import dill
 import joblib
 import lmfit
 import numpy as np
 import xarray as xr
-from arpes.provenance import update_provenance
-from arpes.trace import traceable
-from arpes.typing import DataType
-from arpes.utilities import normalize_to_spectrum
+
+# from arpes.provenance import update_provenance
+# from arpes.trace import traceable
+# from arpes.typing import DataType
+# from arpes.utilities import normalize_to_spectrum
 from joblib import Parallel, delayed
-from packaging import version
+
+# from packaging import version
 import tqdm
 
 from . import mp_fits
@@ -37,22 +38,20 @@ __all__ = ("broadcast_model", "result_to_hints")
 
 TypeIterable = Union[List[type], Tuple[type]]
 
-XARRAY_REQUIRES_VALUES_WRAPPING = version.parse(xr.__version__) > version.parse(
-    "0.10.0"
-)
+# XARRAY_REQUIRES_VALUES_WRAPPING = version.parse(xr.__version__) > version.parse(
+#     "0.10.0"
+# )
 
 
-def wrap_for_xarray_values_unpacking(item):
-    """This is a shim for https://github.com/pydata/xarray/issues/2097."""
-    if XARRAY_REQUIRES_VALUES_WRAPPING:
-        return np.array(item, dtype=object)
+# def wrap_for_xarray_values_unpacking(item):
+#     """This is a shim for https://github.com/pydata/xarray/issues/2097."""
+#     if XARRAY_REQUIRES_VALUES_WRAPPING:
+#         return np.array(item, dtype=object)
 
-    return item
+#     return item
 
 
-def result_to_hints(
-    m: lmfit.model.ModelResult, defaults=None
-) -> Dict[str, Dict[str, Any]]:
+def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> Dict[str, Dict[str, Any]]:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -137,9 +136,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
             iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
         )
     else:
-        tqdm_object = tqdm.tqdm(
-            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
-        )
+        tqdm_object = tqdm.tqdm(iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs)
 
     def tqdm_print_progress(self):
         if self.n_completed_tasks > tqdm_object.n:
@@ -156,11 +153,11 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
         tqdm_object.close()
 
 
-@update_provenance("Broadcast a curve fit along several dimensions")
-@traceable
+# @update_provenance("Broadcast a curve fit along several dimensions")
+# @traceable
 def broadcast_model(
     model_cls: Union[type, TypeIterable],
-    data: DataType,
+    data,
     broadcast_dims,
     params=None,
     model_params=None,
@@ -206,8 +203,11 @@ def broadcast_model(
     if isinstance(broadcast_dims, str):
         broadcast_dims = [broadcast_dims]
 
-    trace("Normalizing to spectrum")
-    data = normalize_to_spectrum(data)
+    # data = normalize_to_spectrum(data)
+    if isinstance(data, xr.Dataset):
+        if "up" in data.data_vars:
+            data = data.up
+        data = data.S.spectrum
 
     cs = {}
     for dim in broadcast_dims:
@@ -221,14 +221,13 @@ def broadcast_model(
     if parallelize is None:
         parallelize = n_fits > 20
 
-    trace("Copying residual")
+    # trace("Copying residual")
     residual = data.copy(deep=True)
     residual.values = np.zeros(residual.shape)
 
-    trace("Parsing model")
+    # trace("Parsing model")
     model = parse_model(model_cls)
 
-    serialize = parallelize
     fitter = mp_fits.MPWorker(
         data=data,
         uncompiled_model=model,
@@ -236,65 +235,38 @@ def broadcast_model(
         params=params,
         model_params=model_params,
         safe=safe,
-        serialize=serialize,
         weights=weights,
         window=window,
         **kwargs,
     )
 
     if parallelize:
-        trace(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
+        parallel_kw.setdefault("n_jobs", -1)
+    else:
+        parallel_kw.setdefault("n_jobs", 1)
+        # trace(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
 
         # print("Running on multiprocessing pool... this may take a while the first time.")
         # from .hot_pool import hot_pool
         # pool = hot_pool.pool
         # exe_results = list(
-        #     wrap_progress(
+        #     tqdm.tqdm(
         #         pool.imap(fitter, template.G.iter_coords()), total=n_fits, desc="Fitting on pool..."
         #     )
         # )
-        parallel_kw.setdefault("n_jobs", -1)
-        # parallel_kw.setdefault("max_nbytes", None)
-        if progress:
-            with joblib_progress(desc="Fitting", total=n_fits) as _:
-                exe_results = Parallel(**parallel_kw)(
-                    delayed(fitter)(c) for c in template.G.iter_coords()
-                )
-        else:
+
+    if progress:
+        with joblib_progress(desc="Fitting", total=n_fits) as _:
             exe_results = Parallel(**parallel_kw)(
                 delayed(fitter)(c) for c in template.G.iter_coords()
             )
     else:
-        trace(f"Running fits (nfits={n_fits}) serially")
-        exe_results = []
-        wrap_progress = lambda x, *_, **__: x
-        if progress:
-            wrap_progress = tqdm.tqdm
+        exe_results = Parallel(**parallel_kw)(delayed(fitter)(c) for c in template.G.iter_coords())
 
-        for _, cut_coords in wrap_progress(
-            template.G.enumerate_iter_coords(), desc="Fitting", total=n_fits
-        ):
-            exe_results.append(fitter(cut_coords))
-
-    if serialize:
-        trace("Deserializing...")
-        print("Deserializing...")
-
-        def unwrap(result_data):
-            # using the lmfit deserialization and serialization seems slower than double pickling with dill
-            # result = lmfit.model.ModelResult(compiled_model, compiled_model.make_params())
-            # return result.loads(result_data)
-            return dill.loads(result_data)
-
-        exe_results = [(unwrap(res), residual, cs) for res, residual, cs in exe_results]
-        print("Finished deserializing")
-
-    trace(f"Finished running fits Collating")
     for fit_result, fit_residual, coords in exe_results:
-        template.loc[coords] = wrap_for_xarray_values_unpacking(fit_result)
+        template.loc[coords] = np.array(fit_result, dtype=object)
         residual.loc[coords] = fit_residual
 
-    trace("Bundling into dataset")
     return xr.Dataset(
         {
             "results": template,
