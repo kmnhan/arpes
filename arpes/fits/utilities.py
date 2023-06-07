@@ -12,7 +12,6 @@ but in the future we would like to provide:
 """
 
 import contextlib
-import os
 import sys
 from typing import Any, Callable, Dict, List, Tuple, Union
 
@@ -20,16 +19,12 @@ import arpes.fits.fit_models
 import joblib
 import lmfit
 import numpy as np
+
+import tqdm
+import tqdm.notebook
 import xarray as xr
 
-# from arpes.provenance import update_provenance
-# from arpes.trace import traceable
-# from arpes.typing import DataType
-# from arpes.utilities import normalize_to_spectrum
 from joblib import Parallel, delayed
-
-# from packaging import version
-import tqdm
 
 from . import mp_fits
 
@@ -49,6 +44,49 @@ TypeIterable = Union[List[type], Tuple[type]]
 #         return np.array(item, dtype=object)
 
 #     return item
+
+
+def is_notebook():
+    # http://stackoverflow.com/questions/34091701/determine-if-were-in-an-ipython-notebook-session
+    if "IPython" not in sys.modules:  # IPython hasn't been imported
+        return False
+    from IPython import get_ipython
+
+    # check for `kernel` attribute on the IPython instance
+    return getattr(get_ipython(), "kernel", None) is not None
+
+
+@contextlib.contextmanager
+def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
+    """Context manager to patch joblib to report into tqdm progress bar given as
+    argument"""
+
+    if file is None:
+        file = sys.stdout
+
+    if notebook is None:
+        notebook = is_notebook()
+
+    if notebook:
+        tqdm_object = tqdm.notebook.tqdm(
+            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
+        )
+    else:
+        tqdm_object = tqdm.tqdm(iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs)
+
+    def tqdm_print_progress(self):
+        if self.n_completed_tasks > tqdm_object.n:
+            n_completed = self.n_completed_tasks - tqdm_object.n
+            tqdm_object.update(n=n_completed)
+
+    original_print_progress = joblib.parallel.Parallel.print_progress
+    joblib.parallel.Parallel.print_progress = tqdm_print_progress
+
+    try:
+        yield tqdm_object
+    finally:
+        joblib.parallel.Parallel.print_progress = original_print_progress
+        tqdm_object.close()
 
 
 def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> Dict[str, Dict[str, Any]]:
@@ -108,49 +146,6 @@ def parse_model(model):
                 raise ValueError("Could not find model: {}".format(token))
 
     return [read_token(token) for token in model.split()]
-
-
-def is_notebook():
-    # http://stackoverflow.com/questions/34091701/determine-if-were-in-an-ipython-notebook-session
-    if "IPython" not in sys.modules:  # IPython hasn't been imported
-        return False
-    from IPython import get_ipython
-
-    # check for `kernel` attribute on the IPython instance
-    return getattr(get_ipython(), "kernel", None) is not None
-
-
-@contextlib.contextmanager
-def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
-    """Context manager to patch joblib to report into tqdm progress bar given as
-    argument"""
-
-    if file is None:
-        file = sys.stdout
-
-    if notebook is None:
-        notebook = is_notebook()
-
-    if notebook:
-        tqdm_object = tqdm.tqdm_notebook(
-            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
-        )
-    else:
-        tqdm_object = tqdm.tqdm(iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs)
-
-    def tqdm_print_progress(self):
-        if self.n_completed_tasks > tqdm_object.n:
-            n_completed = self.n_completed_tasks - tqdm_object.n
-            tqdm_object.update(n=n_completed)
-
-    original_print_progress = joblib.parallel.Parallel.print_progress
-    joblib.parallel.Parallel.print_progress = tqdm_print_progress
-
-    try:
-        yield tqdm_object
-    finally:
-        joblib.parallel.Parallel.print_progress = original_print_progress
-        tqdm_object.close()
 
 
 # @update_provenance("Broadcast a curve fit along several dimensions")
