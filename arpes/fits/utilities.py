@@ -21,7 +21,6 @@ import lmfit
 import numpy as np
 
 import tqdm
-import tqdm.notebook
 import xarray as xr
 
 from joblib import Parallel, delayed
@@ -50,10 +49,10 @@ def is_notebook():
     # http://stackoverflow.com/questions/34091701/determine-if-were-in-an-ipython-notebook-session
     if "IPython" not in sys.modules:  # IPython hasn't been imported
         return False
-    from IPython import get_ipython
-
-    # check for `kernel` attribute on the IPython instance
-    return getattr(get_ipython(), "kernel", None) is not None
+    else:
+        from IPython import get_ipython
+        # check for `kernel` attribute on the IPython instance
+        return getattr(get_ipython(), "kernel", None) is not None
 
 
 @contextlib.contextmanager
@@ -68,6 +67,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
         notebook = is_notebook()
 
     if notebook:
+        import tqdm.notebook
         tqdm_object = tqdm.notebook.tqdm(
             iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
         )

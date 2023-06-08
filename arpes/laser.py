@@ -1,12 +1,11 @@
 """Utilities for estimating quantities of interest when using a laser for photoemission."""
 
 import pint
-from arpes.config import ureg
 from typing import Optional
 
 __all__ = ("electrons_per_pulse", "electrons_per_pulse_mira")
 
-mira_frequency = 54.3 / ureg.microsecond
+mira_frequency = 54.3 / pint.UnitRegistry().microsecond
 
 
 def electrons_per_pulse(

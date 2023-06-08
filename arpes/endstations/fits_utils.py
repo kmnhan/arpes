@@ -5,7 +5,7 @@ import warnings
 from ast import literal_eval
 
 import numpy as np
-from astropy.io.fits.hdu.table import BinTableHDU
+# from astropy.io.fits.hdu.table import BinTableHDU
 from numpy import ndarray
 
 from arpes.utilities.funcutils import collect_leaves, iter_leaves
@@ -163,7 +163,7 @@ def extract_coords(
 
 @traceable
 def find_clean_coords(
-    hdu: BinTableHDU,
+    hdu,#: BinTableHDU,
     attrs: Dict[str, Any],
     spectra: Optional[Any] = None,
     mode: str = "ToF",

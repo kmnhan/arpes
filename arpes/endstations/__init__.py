@@ -6,7 +6,6 @@ import re
 import numpy as np
 import h5py
 import xarray as xr
-from astropy.io import fits
 
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -665,6 +664,7 @@ class FITSEndstation(EndstationBase):
         """
         # Use dimension labels instead of
         self.trace("Opening FITS HDU list.")
+        from astropy.io import fits
         hdulist = fits.open(frame_path, ignore_missing_end=True)
         primary_dataset_name = None
 

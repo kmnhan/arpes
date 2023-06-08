@@ -24,7 +24,6 @@ import pint
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-ureg = pint.UnitRegistry()
 
 DATA_PATH = None
 SOURCE_ROOT = str(Path(__file__).parent)
@@ -178,7 +177,10 @@ def attempt_determine_workspace(current_path=None):
         current_path = os.getcwd()
         for _ in range(3):
             if workspace_matches(current_path):
-                CONFIG["WORKSPACE"] = {"path": current_path, "name": Path(current_path).name}
+                CONFIG["WORKSPACE"] = {
+                    "path": current_path,
+                    "name": Path(current_path).name,
+                }
                 return
 
             current_path = Path(current_path).parent
@@ -231,22 +233,25 @@ def load_plugins() -> None:
     If you need to register a custom plugin you should just call
     `arpes.endstations.add_endstation` directly.
     """
-    import arpes.endstations.plugin as plugin
+    # import arpes.endstations.plugin as plugin
     from arpes.endstations import add_endstation
     import importlib
 
-    skip_modules = {"__pycache__", "__init__"}
-    plugins_dir = str(Path(plugin.__file__).parent)
-    modules = os.listdir(plugins_dir)
-    modules = [
-        m if os.path.isdir(os.path.join(plugins_dir, m)) else os.path.splitext(m)[0]
-        for m in modules
-        if m not in skip_modules
-    ]
+    # skip_modules = {"__pycache__", "__init__"}
+    # plugins_dir = str(Path(plugin.__file__).parent)
+    # modules = os.listdir(plugins_dir)
+    # modules = [
+    #     m if os.path.isdir(os.path.join(plugins_dir, m)) else os.path.splitext(m)[0]
+    #     for m in modules
+    #     if m not in skip_modules
+    # ]
+    modules = ["merlin"]
 
     for module in modules:
         try:
-            loaded_module = importlib.import_module("arpes.endstations.plugin.{}".format(module))
+            loaded_module = importlib.import_module(
+                "arpes.endstations.plugin.{}".format(module)
+            )
             for item in loaded_module.__all__:
                 add_endstation(getattr(loaded_module, item))
         except (AttributeError, ImportError):
@@ -340,7 +345,6 @@ def setup_logging():
 
     try:
         if CONFIG["ENABLE_LOGGING"] and not CONFIG["LOGGING_STARTED"]:
-
             CONFIG["LOGGING_STARTED"] = True
 
             from arpes.utilities.jupyter import generate_logfile_path
@@ -354,6 +358,6 @@ def setup_logging():
         print(e)
 
 
-setup_logging()
-update_configuration()
+# setup_logging()
+# update_configuration()
 load_plugins()
