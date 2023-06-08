@@ -49,7 +49,7 @@ def check() -> None:
         return None
 
     def verify_bokeh() -> Union[str, None]:
-        pip_command = "pip install bokeh>=2.0.0,<3.0.0"
+        pip_command = "pip install bokeh>=2.0.0"
 
         warning = "For bokeh support, install version 2.3.x\n\t with {}".format(pip_command)
         warning_incompatible = (

@@ -38,7 +38,7 @@ DEPENDENCY_GROUPS = {
         "scikit-learn",
         # plotting
         "matplotlib>=3.0.3",
-        "bokeh>=2.0.0,<3.0.0",
+        "bokeh>=2.0.0",
         "ipywidgets>=7.0.1",
         # Misc deps
         "packaging",
