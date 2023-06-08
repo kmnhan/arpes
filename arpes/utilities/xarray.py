@@ -4,7 +4,7 @@ import xarray as xr
 
 from typing import Callable, Dict, Any
 
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = (
     "apply_dataarray",

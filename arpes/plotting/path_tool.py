@@ -5,7 +5,7 @@ import xarray as xr
 from arpes.analysis.path import select_along_path
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import CursorTool, SaveableTool
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ["path_tool"]

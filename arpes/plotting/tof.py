@@ -13,7 +13,7 @@ import numpy as np
 import xarray as xr
 from arpes.plotting.utils import path_for_plot
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = (
     "plot_with_std",

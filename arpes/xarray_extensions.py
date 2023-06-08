@@ -62,7 +62,7 @@ from arpes.analysis.band_analysis_utils import param_getter, param_stderr_getter
 from arpes.models.band import MultifitBand
 from arpes.plotting.utils import fancy_labels, remove_colorbars
 from arpes.plotting.parameter import plot_parameter
-from arpes.typing import DataType, DTypeLike
+from arpes.arpestyping import DataType, DTypeLike
 from arpes.utilities import apply_dataarray
 from arpes.utilities.collections import MappableDict
 from arpes.utilities.conversion import slice_along_path

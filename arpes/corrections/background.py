@@ -2,7 +2,7 @@
 import numpy as np
 
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("remove_incoherent_background",)

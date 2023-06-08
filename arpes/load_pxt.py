@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 from arpes.utilities.string import safe_decode
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 import igor2.binarywave as ibw
 import igor.igorpy as igor
 

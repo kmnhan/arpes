@@ -21,7 +21,7 @@ from arpes.plotting.utils import (
     ddata_daxis_units,
 )
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_item
 

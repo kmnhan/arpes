@@ -7,7 +7,7 @@ import xarray as xr
 from arpes.constants import K_BOLTZMANN_EV_KELVIN
 from arpes.fits.fit_models import AffineBroadenedFD
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("normalize_by_fermi_dirac", "determine_broadened_fermi_distribution", "symmetrize")

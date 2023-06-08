@@ -10,7 +10,7 @@ from arpes import analysis
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import DetectorCalibration
 from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow, BasicHelpDialog
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities.ui import KeyBinding
 
 __all__ = (

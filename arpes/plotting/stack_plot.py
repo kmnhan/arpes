@@ -19,7 +19,7 @@ from arpes.plotting.utils import (
     label_for_dim,
 )
 from arpes.provenance import save_plot_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = (

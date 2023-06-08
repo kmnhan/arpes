@@ -6,7 +6,7 @@ from collections import defaultdict
 from numpy import ndarray
 
 import xarray as xr
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from typing import Any, Callable, Dict, Iterator, Optional, Tuple
 
 __all__ = [

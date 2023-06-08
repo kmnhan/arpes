@@ -6,7 +6,7 @@ import numpy as np
 import typing
 from arpes.exceptions import AnalysisError
 from arpes.plotting.interactive_utils import BokehInteractiveTool, CursorTool
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import Debounce, normalize_to_spectrum
 
 __all__ = (

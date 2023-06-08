@@ -3,7 +3,7 @@ from qtpy import QtWidgets
 import numpy as np
 
 from arpes.utilities import normalize_to_spectrum, group_by
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities.conversion import convert_to_kspace
 from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow
 from arpes.utilities.ui import tabs, horizontal, vertical, label, numeric_input, CollectUI

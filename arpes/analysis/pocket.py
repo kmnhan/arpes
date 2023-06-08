@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 import xarray as xr
 from arpes.fits.fit_models import AffineBackgroundModel, LorentzianModel
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.conversion import slice_along_path
 

@@ -25,7 +25,7 @@ from matplotlib.lines import Line2D
 import xarray as xr
 from arpes import VERSION
 from arpes.config import CONFIG, SETTINGS, attempt_determine_workspace, is_using_tex
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.jupyter import get_recent_history, get_notebook_name
 

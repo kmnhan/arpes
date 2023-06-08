@@ -13,7 +13,7 @@ from typing import List, Union
 import arpes.config
 import arpes.xarray_extensions
 from arpes.utilities import normalize_to_spectrum
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities.qt.data_array_image_view import DataArrayPlot
 
 from arpes.utilities.ui import KeyBinding, horizontal, tabs, CursorRegion

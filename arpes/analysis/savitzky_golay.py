@@ -8,7 +8,7 @@ import scipy.signal
 import typing
 import xarray as xr
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = ("savitzky_golay",)
 

@@ -12,7 +12,7 @@ import typing
 import xarray as xr
 from arpes.fits import GStepBModel, broadcast_model
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.math import fermi_distribution
 

@@ -30,7 +30,7 @@ from typing import Any, Callable, Union, List, Optional
 import xarray as xr
 
 from arpes import VERSION
-from arpes.typing import xr_types, DataType
+from arpes.arpestyping import xr_types, DataType
 
 
 def attach_id(data: xr.DataArray) -> None:

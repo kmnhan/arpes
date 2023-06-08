@@ -2,7 +2,7 @@
 from functools import wraps
 
 from arpes.provenance import provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 from typing import List, Tuple, Any
 

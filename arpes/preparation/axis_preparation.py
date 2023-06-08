@@ -8,7 +8,7 @@ from scipy.ndimage import geometric_transform
 
 import xarray as xr
 from arpes.provenance import provenance, update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import lift_dataarray_to_generic
 from arpes.utilities.normalize import normalize_to_spectrum
 

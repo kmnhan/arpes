@@ -10,7 +10,7 @@ earlier in a dataset which can be used to furnish equivalent references.
 """
 from collections import OrderedDict
 
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_dataset, deep_equals
 from .fermi_edge_corrections import *
 

@@ -25,7 +25,7 @@ from arpes.utilities.conversion.bounds_calculations import (
     euler_to_kz,
     full_angles_to_k,
 )
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = (
     "convert_coordinates_to_kspace_forward",

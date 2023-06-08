@@ -2,7 +2,7 @@
 import numpy as np
 
 from arpes.fits import LinearModel
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = ("kfermi_from_mdcs",)
 

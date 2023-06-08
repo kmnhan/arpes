@@ -5,7 +5,7 @@ import scipy.ndimage.interpolation
 import colorcet as cc
 import xarray as xr
 from arpes.plotting.interactive_utils import BokehInteractiveTool
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities.funcutils import Debounce
 from arpes.utilities.normalize import normalize_to_spectrum
 

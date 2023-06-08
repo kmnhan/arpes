@@ -1,6 +1,6 @@
 """Utilities to programmatically get access to an ARPES spectrum as an xr.DataArray."""
 import xarray as xr
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = (
     "normalize_to_spectrum",

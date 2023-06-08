@@ -4,7 +4,7 @@ import inspect
 from qtpy import QtWidgets
 
 from arpes.utilities import normalize_to_spectrum, group_by
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 from arpes.utilities.qt import qt_info, SimpleApp, SimpleWindow, BasicHelpDialog
 from arpes.utilities.ui import (

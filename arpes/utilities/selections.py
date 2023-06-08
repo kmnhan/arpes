@@ -8,7 +8,7 @@ from typing import Dict, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
 
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 from arpes.utilities.xarray import unwrap_xarray_dict
 

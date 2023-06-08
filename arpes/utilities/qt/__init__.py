@@ -1,5 +1,5 @@
 """Infrastructure code for Qt based analysis tools."""
-from arpes.typing import xr_types
+from arpes.arpestyping import xr_types
 import pyqtgraph as pg
 from pyqtgraph import ViewBox
 import functools

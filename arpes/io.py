@@ -24,7 +24,7 @@ import xarray as xr
 
 import arpes.config
 from arpes.endstations import load_scan
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 
 __all__ = (
     "load_data",

@@ -3,7 +3,7 @@ import numpy as np
 
 from arpes.preparation import normalize_dim
 from arpes.provenance import update_provenance
-from arpes.typing import DataType
+from arpes.arpestyping import DataType
 from arpes.utilities import normalize_to_spectrum
 
 __all__ = ("find_t0", "relative_change", "normalized_relative_change")
