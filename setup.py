@@ -9,14 +9,16 @@ from setuptools import find_packages, setup
 from setuptools.command.install import install
 
 NAME = "arpes"
-DESCRIPTION = "Modular data analysis code for angle resolved photoemission spectroscopy (ARPES)"
+DESCRIPTION = (
+    "Modular data analysis code for angle resolved photoemission spectroscopy (ARPES)"
+)
 URL = "https://gitlab.com/lanzara-group/python-arpes"
 EMAIL = "chstan@berkeley.edu"
 AUTHOR = "Conrad Stansbury"
 REQUIRES_PYTHON = ">=3.8.0"
 
 about = {}
-with open("./arpes/__init__.py") as fp:
+with open("./arpes/__init__.py", encoding="utf-8") as fp:
     exec(fp.read(), about)
 
 VERSION = about["VERSION"]
@@ -60,7 +62,9 @@ DEPENDENCY_GROUPS = {
     ],
 }
 
-requirements = [y for k, v in DEPENDENCY_GROUPS.items() for y in v if k not in {"igor", "ml"}]
+requirements = [
+    y for k, v in DEPENDENCY_GROUPS.items() for y in v if k not in {"igor", "ml"}
+]
 
 DEV_DEPENDENCIES = {
     "jupyter": [
