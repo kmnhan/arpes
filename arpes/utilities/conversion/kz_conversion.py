@@ -34,6 +34,18 @@ def _kp_to_polar(kinetic_energy, kp, phi, inner_potential, angle_offset):
             )
             + angle_offset
         )
+
+@numba.njit(parallel=True, cache=True)
+def _kpkz_to_polar(kinetic_energy, kp, kz, perp_angle, phi, inner_potential, angle_offset):
+    """Efficiently performs the inverse coordinate transform phi(hv, kp)."""
+    for i in numba.prange(len(kp)):
+        phi[i] = (
+            np.arcsin(
+                (np.sin(perp_angle[i]) * kz[i] - np.cos(perp_angle[i]) * kp[i])
+                / (arpes.constants.K_INV_ANGSTROM * np.sqrt(kinetic_energy[i] + inner_potential))
+            )
+            + angle_offset
+        )
         
 @numba.njit
 def index_of_value(arr: np.array, v):
@@ -167,9 +179,10 @@ class ConvertKpKz(CoordinateConverter):
             else:
                 raise ValueError("Could not match polar dimensions to hv")
         
-        _kp_to_polar(
+        _kpkz_to_polar(
             kinetic_energy,
-            kp / np.cos(polar_angle),
+            kp, kz,
+            polar_angle,
             self.phi,
             self.arr.S.inner_potential,
             self.arr.S.phi_offset + parallel_angle,

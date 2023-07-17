@@ -385,6 +385,9 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
         ("chi", "hv", "phi"): ["kx", "ky", "kz"],
     }.get(tuple(old_dims))
 
+    if "theta" in arr.coords and "theta" not in old_dims:
+        old_dims = ["theta"] + old_dims
+    
     full_old_dims = old_dims + list(kept.keys())
     projection_vectors = np.ndarray(
         shape=tuple(len(arr.coords[d]) for d in full_old_dims), dtype=object
@@ -492,21 +495,21 @@ def convert_coordinates_to_kspace_forward(arr: DataType, **kwargs):
             kinetic_energy,
             raw_coords["phi"],
             raw_coords["beta"],
-            theta=0,
+            theta=raw_coords["theta"],
             slit_is_vertical=arr.S.is_slit_vertical,
         ),
         "ky": euler_to_ky(
             kinetic_energy,
             raw_coords["phi"],
             raw_coords["beta"],
-            theta=0,
+            theta=raw_coords["theta"],
             slit_is_vertical=arr.S.is_slit_vertical,
         ),
         "kz": euler_to_kz(
             kinetic_energy,
             raw_coords["phi"],
             raw_coords["beta"],
-            theta=0,
+            theta=raw_coords["theta"],
             slit_is_vertical=arr.S.is_slit_vertical,
             inner_potential=inner_potential,
         ),
