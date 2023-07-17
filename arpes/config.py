@@ -244,7 +244,7 @@ def load_plugins() -> None:
     #     for m in modules
     #     if m not in skip_modules
     # ]
-    modules = ["merlin"]
+    modules = ["merlin", "HERSEndstationERLab"]
 
     for module in modules:
         try:

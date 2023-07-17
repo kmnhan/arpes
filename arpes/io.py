@@ -211,8 +211,12 @@ def file_for_pickle(name):
 
 def load_pickle(name: str) -> Any:
     """Loads a workspace local pickle. Inverse to `save_pickle`."""
-    with open(file_for_pickle(name), "rb") as file:
-        return pickle.load(file)
+    
+    try:
+        with open(file_for_pickle(name), "rb") as file:
+            return pickle.load(file)
+    except ModuleNotFoundError:
+        return pd.read_pickle(file_for_pickle(name))
 
 
 def save_pickle(data: Any, name: str):
