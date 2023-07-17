@@ -146,10 +146,11 @@ def normalize_by_fermi_dirac(
         divided = without_background / broadening_fit.eval(
             x=data.coords["eV"].values, conv_width=broadening, lin_bkg=0, const_bkg=1, offset=0
         )
-
-    divided.coords["eV"].values = (
-        divided.coords["eV"].values - broadening_fit.params["fd_center"].value
-    )
+    
+    divided = divided.assign_coords(eV=divided.coords["eV"].values - broadening_fit.params["fd_center"].value)
+    # divided.coords["eV"].values = (
+        # divided.coords["eV"].values - broadening_fit.params["fd_center"].value
+    # )
     return divided
 
 
