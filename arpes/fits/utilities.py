@@ -51,6 +51,7 @@ def is_notebook():
         return False
     else:
         from IPython import get_ipython
+
         # check for `kernel` attribute on the IPython instance
         return getattr(get_ipython(), "kernel", None) is not None
 
@@ -68,11 +69,14 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
 
     if notebook:
         import tqdm.notebook
+
         tqdm_object = tqdm.notebook.tqdm(
             iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
         )
     else:
-        tqdm_object = tqdm.tqdm(iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs)
+        tqdm_object = tqdm.tqdm(
+            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
+        )
 
     def tqdm_print_progress(self):
         if self.n_completed_tasks > tqdm_object.n:
@@ -89,7 +93,9 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
         tqdm_object.close()
 
 
-def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> Dict[str, Dict[str, Any]]:
+def result_to_hints(
+    m: lmfit.model.ModelResult, defaults=None
+) -> Dict[str, Dict[str, Any]]:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -164,6 +170,7 @@ def broadcast_model(
     parallelize=None,
     trace: Callable = None,
     parallel_kw=dict(),
+    parallel_obj: joblib.Parallel | None = None,
     **kwargs,
 ):
     """Perform a fit across a number of dimensions.
@@ -251,14 +258,16 @@ def broadcast_model(
         #         pool.imap(fitter, template.G.iter_coords()), total=n_fits, desc="Fitting on pool..."
         #     )
         # )
+    if parallel_obj is None:
+        parallel_obj = Parallel(**parallel_kw)
 
     if progress:
         with joblib_progress(desc="Fitting", total=n_fits) as _:
-            exe_results = Parallel(**parallel_kw)(
+            exe_results = parallel_obj(
                 delayed(fitter)(c) for c in template.G.iter_coords()
             )
     else:
-        exe_results = Parallel(**parallel_kw)(delayed(fitter)(c) for c in template.G.iter_coords())
+        exe_results = parallel_obj(delayed(fitter)(c) for c in template.G.iter_coords())
 
     for fit_result, fit_residual, coords in exe_results:
         template.loc[coords] = np.array(fit_result, dtype=object)
