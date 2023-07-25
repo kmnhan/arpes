@@ -13,7 +13,7 @@ import xarray as xr
 from arpes.utilities.string import safe_decode
 from arpes.arpestyping import DataType
 import igor2.binarywave as ibw
-import igor.igorpy as igor
+import igor2.igorpy as igor
 
 Wave = Any  # really, igor.Wave but we do not assume installation
 

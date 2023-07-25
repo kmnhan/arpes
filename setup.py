@@ -53,7 +53,6 @@ DEPENDENCY_GROUPS = {
         "ase>=3.17.0",
         "numba>=0.53.0,<1.0.0",
     ],
-    "igor": ["igor==0.3.1"],
     "ml": [
         "scikit-learn>=0.24.0,<1.0.0",
         "scikit-image",
@@ -97,8 +96,8 @@ You should follow standard best practices for working with IPython and Jupyter.
 To get the interactive volumetric data explorer `qt_tool` you will need to install
 `PySide6` and `pyqtgraph`. 
 
-To use the Igor data loading libraries in PyARPES you will need to install the `igor` 
-module from 'https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1'.
+To use the Igor data loading libraries in PyARPES you will need to install the `igor2` 
+module from 'https://github.com/kmnhan/igor2'.
 
 Some functionality, including PCA/Factor Analysis decomposition tools, require 
 additional heavy dependencies such as `scikit-learn` and `scikit-image`. 

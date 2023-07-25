@@ -28,20 +28,17 @@ def check() -> None:
         return None
 
     def verify_igor_pro() -> Union[str, None]:
-        pip_command = "pip install https://github.com/chstan/igorpy/tarball/712a4c4#egg=igor-0.3.1"
+        pip_command = "pip install git+https://github.com/kmnhan/igor2.git"
         warning = "For Igor support, install igorpy with: {}".format(pip_command)
         warning_incompatible = (
-            "PyARPES requires a patched copy of igorpy, "
-            "available at \n\thttps://github.com/chstan/igorpy/tarball/712a4c4\n\n\tYou can install with: "
+            "PyARPES requires a patched copy of igor2, "
+            "available at \n\thttps://github.com/kmnhan/igor2\n\n\tYou can install with: "
             "{}".format(pip_command)
         )
         try:
-            import igor
-
-            if igor.__version__ <= "0.3":
-                raise ValueError("Not using patched version of igorpy.")
-
-        except ValueError:
+            import igor2
+            import igor2.igorpy
+        except ModuleNotFoundError:
             return warning_incompatible
         except (ImportError, AttributeError):
             return warning
