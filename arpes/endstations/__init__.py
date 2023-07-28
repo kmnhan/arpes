@@ -90,6 +90,7 @@ class EndstationBase:
         ".ibw",
         ".nxs",
         ".txt",
+        ".zip",
     }
     _USE_REGEX = True
 
