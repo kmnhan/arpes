@@ -55,7 +55,7 @@ def soft_normalize_dim(arr: xr.DataArray, dim_or_dims, keep_id=False, amp_limit=
         dims = [dims]
 
     summed_arr = arr.fillna(arr.mean()).sum([d for d in arr.dims if d not in dims])
-    normalized_arr = arr / (summed_arr / np.product(summed_arr.shape))
+    normalized_arr = arr / (summed_arr / np.prod(summed_arr.shape))
 
     to_return = xr.DataArray(normalized_arr.values, arr.coords, arr.dims, attrs=arr.attrs)
 
@@ -94,7 +94,7 @@ def normalize_dim(arr: DataType, dim_or_dims: Union[str, List[str]], keep_id=Fal
         dims = [dims]
 
     summed_arr = arr.fillna(arr.mean()).sum([d for d in arr.dims if d not in dims])
-    normalized_arr = arr / (summed_arr / np.product(summed_arr.shape))
+    normalized_arr = arr / (summed_arr / np.prod(summed_arr.shape))
 
     to_return = xr.DataArray(normalized_arr.values, arr.coords, arr.dims, attrs=arr.attrs)
 

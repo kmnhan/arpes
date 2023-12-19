@@ -91,13 +91,13 @@ class FitInspectionPlot(QWidget):
         p1 = self.inner_plot.plot(xr.DataArray(self.data, coords, dims), clear=True)
         p2 = self.inner_plot.plot(xr.DataArray(self.residual, coords, dims))
         p3 = self.inner_plot.plot(xr.DataArray(self.eval_model, coords, dims))
-        p4 = self.inner_plot.plot(xr.DataArray(self.init_eval_model, coords, dims))
+        # p4 = self.inner_plot.plot(xr.DataArray(self.init_eval_model, coords, dims))
 
         plot_width = int(math.ceil(qt_info.inches_to_px(0.02)))
         p1.setPen(pg.mkPen(width=plot_width, color=(255, 255, 255)))
         p2.setPen(pg.mkPen(width=plot_width, color=(255, 0, 0)))
         p3.setPen(pg.mkPen(width=plot_width, color=(50, 200, 20), style=QtCore.Qt.DotLine))
-        p4.setPen(pg.mkPen(width=plot_width, color=(70, 150, 70), style=QtCore.Qt.DotLine))
+        # p4.setPen(pg.mkPen(width=plot_width, color=(70, 150, 70), style=QtCore.Qt.DotLine))
 
         # update the model info
         self.model_info.set_model_result(model_result)
