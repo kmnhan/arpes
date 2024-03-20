@@ -74,9 +74,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
             iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
         )
     else:
-        tqdm_object = tqdm.tqdm(
-            iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs
-        )
+        tqdm_object = tqdm.tqdm(iterable=None, dynamic_ncols=dynamic_ncols, file=file, **kwargs)
 
     def tqdm_print_progress(self):
         if self.n_completed_tasks > tqdm_object.n:
@@ -93,9 +91,7 @@ def joblib_progress(file=None, notebook=None, dynamic_ncols=True, **kwargs):
         tqdm_object.close()
 
 
-def result_to_hints(
-    m: lmfit.model.ModelResult, defaults=None
-) -> Dict[str, Dict[str, Any]]:
+def result_to_hints(m: lmfit.model.ModelResult, defaults=None) -> Dict[str, Dict[str, Any]]:
     """Turns an `lmfit.model.ModelResult` into a dictionary with initial guesses.
 
     Args:
@@ -248,24 +244,17 @@ def broadcast_model(
         parallel_kw.setdefault("n_jobs", -1)
     else:
         parallel_kw.setdefault("n_jobs", 1)
-        # trace(f"Running fits (nfits={n_fits}) in parallel (n_threads={os.cpu_count()})")
 
-        # print("Running on multiprocessing pool... this may take a while the first time.")
-        # from .hot_pool import hot_pool
-        # pool = hot_pool.pool
-        # exe_results = list(
-        #     tqdm.tqdm(
-        #         pool.imap(fitter, template.G.iter_coords()), total=n_fits, desc="Fitting on pool..."
-        #     )
-        # )
+    # Disable memmapping due to occasional unserialization failures
+    # See https://github.com/joblib/joblib/issues/1376
+    parallel_kw.setdefault("max_nbytes", None)
+
     if parallel_obj is None:
         parallel_obj = Parallel(**parallel_kw)
 
     if progress:
         with joblib_progress(desc="Fitting", total=n_fits) as _:
-            exe_results = parallel_obj(
-                delayed(fitter)(c) for c in template.G.iter_coords()
-            )
+            exe_results = parallel_obj(delayed(fitter)(c) for c in template.G.iter_coords())
     else:
         exe_results = parallel_obj(delayed(fitter)(c) for c in template.G.iter_coords())
 
